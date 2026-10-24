@@ -53,7 +53,7 @@ function RatingDist({ dist }) {
 function ReviewItem({ r }) {
   const s = r.sentiment
   return (
-    <li className="rounded-2xl bg-white p-4 ring-1 ring-forest/10">
+    <li className="rounded-2xl card-sky p-4 ring-1 ring-forest/5">
       <div className="flex flex-wrap items-center gap-2 text-sm">
         {r.rating != null && <span className="font-semibold">{fmtRating(r.rating)} ดาว</span>}
         {s && (
@@ -139,7 +139,7 @@ export default function PlaceDetail() {
         <PlaceArt place={p} className="h-48 sm:h-64" showLabel={false} w={1200} h={320} />
       </div>
       <div className="mx-auto -mt-16 max-w-7xl px-4 sm:px-6">
-        <div className="relative rounded-3xl bg-white p-6 ring-1 ring-forest/10 sm:p-8">
+        <div className="relative rounded-3xl card-sky p-6 ring-1 ring-forest/5 sm:p-8">
           <p className="text-sm font-medium text-moss">{p.primary_type || 'สถานที่'}</p>
           <h1 className="mt-1 text-3xl text-ink sm:text-4xl">{p.name}</h1>
           <p className="mt-1 text-muted">{p.address}</p>
@@ -149,7 +149,7 @@ export default function PlaceDetail() {
             {p.ml.top_interest_label && <span className="rounded-full bg-mist px-2.5 py-0.5 text-xs font-medium text-forest">เด่นด้าน{p.ml.top_interest_label}</span>}
           </div>
           <div className="mt-5 flex flex-wrap gap-2">
-            <button onClick={() => add(p)} className="rounded-full bg-forest px-5 py-2.5 text-sm font-medium text-white hover:bg-forest-deep">เพิ่มลงทริป</button>
+            <button onClick={() => add(p)} className="rounded-full btn-primary px-5 py-2.5 text-sm font-medium text-white">เพิ่มลงทริป</button>
             {p.google_maps_url && (
               <a href={p.google_maps_url} target="_blank" rel="noreferrer" className="rounded-full px-5 py-2.5 text-sm font-medium text-forest ring-1 ring-forest/25 hover:bg-mist">
                 เปิดใน Google Maps
@@ -170,8 +170,8 @@ export default function PlaceDetail() {
 
       <div className="mx-auto mt-8 grid max-w-7xl gap-8 px-4 sm:px-6 lg:grid-cols-[1fr_380px]">
         <div className="space-y-8">
-          <section className="rounded-3xl bg-white p-6 ring-1 ring-forest/10 sm:p-8">
-            <h2 className="text-2xl text-forest">รีวิวพูดถึงอะไรบ้าง</h2>
+          <section className="rounded-3xl card-sky p-6 ring-1 ring-forest/5 sm:p-8">
+            <h2 className="text-2xl text-ink">รีวิวพูดถึงอะไรบ้าง</h2>
             {!a.available ? (
               <p className="mt-3 text-muted">สถานที่นี้ยังไม่มีข้อความรีวิวในชุดข้อมูล จึงยังวิเคราะห์ไม่ได้</p>
             ) : (
@@ -203,7 +203,7 @@ export default function PlaceDetail() {
           </section>
 
           <section>
-            <h2 className="mb-4 text-2xl text-forest">รีวิวทั้งหมด</h2>
+            <h2 className="mb-4 text-2xl text-ink">รีวิวทั้งหมด</h2>
             <Reviews placeId={p.place_id} />
           </section>
         </div>
@@ -213,13 +213,13 @@ export default function PlaceDetail() {
 
           {hotels && !p.is_accommodation && (
             <section>
-              <h2 className="text-xl text-forest">ที่พักในรัศมี 15 กม.</h2>
+              <h2 className="text-xl text-ink">ที่พักในรัศมี 15 กม.</h2>
               {hotels.items.length === 0 ? (
                 <p className="mt-2 text-sm text-muted">ไม่พบที่พักในชุดข้อมูลใกล้ที่นี่</p>
               ) : (
                 <ul className="mt-3 space-y-2">
                   {hotels.items.map((h) => (
-                    <li key={h.place_id} className="rounded-xl bg-white p-3 ring-1 ring-forest/10">
+                    <li key={h.place_id} className="rounded-xl card-sky p-3 ring-1 ring-forest/5">
                       <Link to={`/place/${encodeURIComponent(h.place_id)}`} className="font-medium hover:underline">{h.name}</Link>
                       <div className="mt-0.5 flex flex-wrap gap-x-3 text-sm text-muted">
                         <span>{h.distance_km} กม.</span>
@@ -235,12 +235,12 @@ export default function PlaceDetail() {
 
           {similar.length > 0 && (
             <section>
-              <h2 className="text-xl text-forest">ที่เที่ยวที่คล้ายกัน</h2>
+              <h2 className="text-xl text-ink">ที่เที่ยวที่คล้ายกัน</h2>
               <p className="text-sm text-muted">จากความคล้ายของเนื้อหารีวิวและประเภท</p>
               <ul className="mt-3 space-y-2">
                 {similar.map((s) => (
                   <li key={s.place_id}>
-                    <Link to={`/place/${encodeURIComponent(s.place_id)}`} className="flex items-center gap-3 rounded-xl bg-white p-2 ring-1 ring-forest/10 hover:ring-forest/30">
+                    <Link to={`/place/${encodeURIComponent(s.place_id)}`} className="flex items-center gap-3 rounded-xl card-sky p-2 ring-1 ring-forest/5 hover:ring-forest/30">
                       <PlaceArt place={s} className="h-12 w-16 shrink-0 rounded-lg" showLabel={false} />
                       <span className="min-w-0">
                         <span className="block truncate font-medium">{s.name}</span>

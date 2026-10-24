@@ -62,7 +62,7 @@ function StartPointPicker({ start, onChange }) {
 
   return (
     <div className="space-y-2">
-      <button type="button" onClick={useMyLocation} className="w-full rounded-xl bg-forest px-3 py-2 text-sm font-medium text-white hover:bg-forest-deep">
+      <button type="button" onClick={useMyLocation} className="w-full rounded-xl btn-primary px-3 py-2 text-sm font-medium text-white">
         ใช้ตำแหน่งปัจจุบัน
       </button>
       {geoState && <p className="text-xs text-muted">{geoState}</p>}
@@ -76,7 +76,7 @@ function StartPointPicker({ start, onChange }) {
           className="w-full rounded-xl bg-white px-3 py-2 text-sm ring-1 ring-forest/15 outline-none focus:ring-2 focus:ring-moss"
         />
         {results.length > 0 && (
-          <ul className="absolute z-[1100] mt-1 max-h-64 w-full overflow-auto rounded-xl bg-white py-1 shadow-lg ring-1 ring-forest/10">
+          <ul className="absolute z-[1100] mt-1 max-h-64 w-full overflow-auto rounded-xl card-sky py-1 shadow-lg ring-1 ring-forest/5">
             {results.map((p) => (
               <li key={p.place_id}>
                 <button
@@ -209,7 +209,7 @@ export default function Recommend() {
           <label className="mt-4 block text-sm font-semibold text-forest" htmlFor="radius">
             รัศมี {radius} กม.
           </label>
-          <input id="radius" type="range" min={5} max={150} step={5} value={radius} onChange={(e) => update({ radius_km: e.target.value })} className="mt-1 w-full accent-[#1f4d3a]" />
+          <input id="radius" type="range" min={5} max={150} step={5} value={radius} onChange={(e) => update({ radius_km: e.target.value })} className="mt-1 w-full accent-[#2067da]" />
         </div>
       )}
 
@@ -255,7 +255,7 @@ export default function Recommend() {
       </div>
 
       <label className="flex items-center gap-2 text-sm">
-        <input type="checkbox" checked={lodging} onChange={(e) => update({ lodging: e.target.checked ? 1 : null })} className="h-4 w-4 accent-[#1f4d3a]" />
+        <input type="checkbox" checked={lodging} onChange={(e) => update({ lodging: e.target.checked ? 1 : null })} className="h-4 w-4 accent-[#2067da]" />
         แสดงเฉพาะที่พัก
       </label>
     </div>
@@ -267,7 +267,7 @@ export default function Recommend() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
-      <h1 className="text-3xl text-forest sm:text-4xl">{mode === 'location' ? 'ที่เที่ยวใกล้จุดเริ่มต้น' : 'ที่เที่ยวที่ตรงกับคุณ'}</h1>
+      <h1 className="text-gradient-sky pb-1 text-3xl font-semibold sm:text-4xl">{mode === 'location' ? 'ที่เที่ยวใกล้จุดเริ่มต้น' : 'ที่เที่ยวที่ตรงกับคุณ'}</h1>
       <p className="mt-1 text-muted">
         จัดอันดับด้วย Content-Based Filtering ร่วมกับคะแนนรีวิวและผลวิเคราะห์ความรู้สึกจากข้อความรีวิว
       </p>
@@ -278,7 +278,7 @@ export default function Recommend() {
 
       <div className="mt-6 grid gap-8 lg:grid-cols-[300px_1fr]">
         <aside className={`${showFilters ? 'block' : 'hidden'} lg:block`}>
-          <div className="rounded-2xl bg-white p-5 ring-1 ring-forest/10 lg:sticky lg:top-24">{filters}</div>
+          <div className="rounded-2xl card-sky p-5 ring-1 ring-forest/5 lg:sticky lg:top-24">{filters}</div>
         </aside>
 
         <section aria-live="polite">

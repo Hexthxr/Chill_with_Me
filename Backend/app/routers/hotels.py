@@ -59,6 +59,18 @@ async def coverage():
     return {"total": total, "with_price": priced, "note": f"ชุดข้อมูลมีราคาที่พักเพียง {priced} แห่งจาก {total:,} แห่ง"}
 
 
+@router.get("/provinces")
+async def hotel_provinces(limit: int = Query(6, ge=1, le=77)):
+    """Provinces with the most lodging rows in the dataset (used for the home page tabs)."""
+    db = get_db()
+    rows = await (await db.hotels.aggregate([
+        {"$group": {"_id": "$province", "count": {"$sum": 1}}},
+        {"$sort": {"count": -1}},
+        {"$limit": limit},
+    ])).to_list(None)
+    return [{"province": r["_id"], "count": r["count"]} for r in rows if r["_id"]]
+
+
 @router.get("/near")
 async def hotels_near(
     lat: float = Query(..., ge=5, le=21), lng: float = Query(..., ge=97, le=106),

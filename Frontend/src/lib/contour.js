@@ -2,15 +2,15 @@
 // contour lines tinted by place family instead – never presented as a photo of the place.
 
 export const FAMILIES = {
-  sea: { bg: '#d9ece8', line: '#2f7f86', label: 'ทะเล' },
-  mountain: { bg: '#e3e8dc', line: '#4b6b4f', label: 'ภูเขา' },
-  nature: { bg: '#dcebd3', line: '#3e7b4a', label: 'ธรรมชาติ' },
-  cafe: { bg: '#f0e5d6', line: '#8a5a3b', label: 'คาเฟ่' },
-  culture: { bg: '#f4ead0', line: '#a87518', label: 'วัฒนธรรม' },
-  family: { bg: '#f3e3dc', line: '#b0573f', label: 'ครอบครัว' },
-  lodging: { bg: '#e2e4ef', line: '#4a5a8a', label: 'ที่พัก' },
-  food: { bg: '#f2e4cf', line: '#9a6b2f', label: 'อาหาร' },
-  default: { bg: '#e7efe0', line: '#5e8c61', label: 'สถานที่' },
+  sea: { bg: '#d6f1fb', line: '#0b86b8', label: 'ทะเล' },
+  mountain: { bg: '#dde7fb', line: '#3559b0', label: 'ภูเขา' },
+  nature: { bg: '#d5f3f1', line: '#0f8a8a', label: 'ธรรมชาติ' },
+  cafe: { bg: '#e4e7fc', line: '#5458c8', label: 'คาเฟ่' },
+  culture: { bg: '#e1edfd', line: '#2a6bd0', label: 'วัฒนธรรม' },
+  family: { bg: '#dcf2fc', line: '#1b93c8', label: 'ครอบครัว' },
+  lodging: { bg: '#e6e4fc', line: '#6157c9', label: 'ที่พัก' },
+  food: { bg: '#e0eefd', line: '#3a7bd0', label: 'อาหาร' },
+  default: { bg: '#e6f0fd', line: '#4f8fe6', label: 'สถานที่' },
 }
 
 export function familyOf(place) {

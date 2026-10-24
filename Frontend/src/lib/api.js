@@ -60,6 +60,7 @@ export const api = {
   hotelsNear: (params) => request('/api/hotels/near', { params }),
   hotelsAlongRoute: (body) => request('/api/hotels/along-route', { method: 'POST', body }),
   hotelCoverage: () => request('/api/hotels/coverage'),
+  hotelProvinces: (limit = 6) => request('/api/hotels/provinces', { params: { limit } }),
   computePlan: (plan, signal) => request('/api/planner/compute', { method: 'POST', body: plan, signal }),
   optimizeDay: (body) => request('/api/planner/optimize', { method: 'POST', body }),
   listTrips: (params) => request('/api/trips', { params }),

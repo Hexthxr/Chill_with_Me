@@ -8,9 +8,9 @@ import { KIND_LABEL } from './planUtils'
 
 export const KIND_STYLE = {
   place: { stripe: 'bg-forest', chip: 'bg-mist text-forest' },
-  food: { stripe: 'bg-[#9a6b2f]', chip: 'bg-[#f2e4cf] text-[#7a521f]' },
-  hotel: { stripe: 'bg-[#4a5a8a]', chip: 'bg-[#e2e4ef] text-[#3b4a78]' },
-  rest: { stripe: 'bg-sun', chip: 'bg-sun-soft text-[#6b4f0e]' },
+  food: { stripe: 'bg-[#0ea5e9]', chip: 'bg-[#e0f2fe] text-[#0369a1]' },
+  hotel: { stripe: 'bg-[#6366f1]', chip: 'bg-[#e0e7ff] text-[#4338ca]' },
+  rest: { stripe: 'bg-[#14b8a6]', chip: 'bg-[#ccfbf1] text-[#0f766e]' },
   custom: { stripe: 'bg-moss', chip: 'bg-mist text-forest' },
 }
 
@@ -110,7 +110,7 @@ export default function BlockItem({ block, computed, index, overlay = false }) {
               <div>
                 <span className="text-xs text-muted">ล็อกเวลาเริ่ม</span>
                 <div className="mt-0.5 flex items-center gap-2">
-                  <input type="checkbox" aria-label="ล็อกเวลาเริ่ม" checked={block.locked} onChange={(e) => update(block.id, { locked: e.target.checked, locked_start: e.target.checked ? block.locked_start || computed?.start?.slice(0, 5) || '09:00' : block.locked_start })} className="h-4 w-4 accent-[#1f4d3a]" />
+                  <input type="checkbox" aria-label="ล็อกเวลาเริ่ม" checked={block.locked} onChange={(e) => update(block.id, { locked: e.target.checked, locked_start: e.target.checked ? block.locked_start || computed?.start?.slice(0, 5) || '09:00' : block.locked_start })} className="h-4 w-4 accent-[#2067da]" />
                   <input type="time" disabled={!block.locked} value={block.locked_start || ''} onChange={(e) => update(block.id, { locked_start: e.target.value })} className="min-w-0 flex-1 rounded-lg bg-cream px-2 py-1 ring-1 ring-forest/15 disabled:opacity-40" />
                 </div>
               </div>

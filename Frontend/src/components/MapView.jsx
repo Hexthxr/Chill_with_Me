@@ -46,11 +46,11 @@ export default function MapView({ markers = [], routes = [], dots = [], classNam
           <Polyline
             key={i}
             positions={r.positions}
-            pathOptions={{ color: r.color || '#1f4d3a', weight: 4, opacity: 0.85, dashArray: r.estimate ? '6 8' : undefined }}
+            pathOptions={{ color: r.color || '#2067da', weight: 4, opacity: 0.85, dashArray: r.estimate ? '6 8' : undefined }}
           />
         ))}
         {dots.map((d, i) => (
-          <CircleMarker key={`d${i}`} center={[d.lat, d.lng]} radius={6} pathOptions={{ color: '#fff', weight: 2, fillColor: d.color || '#5e8c61', fillOpacity: 1 }}>
+          <CircleMarker key={`d${i}`} center={[d.lat, d.lng]} radius={6} pathOptions={{ color: '#fff', weight: 2, fillColor: d.color || '#4f8fe6', fillOpacity: 1 }}>
             {d.title && <Popup>{d.title}</Popup>}
           </CircleMarker>
         ))}

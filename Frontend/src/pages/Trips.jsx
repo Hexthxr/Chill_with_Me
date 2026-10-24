@@ -34,10 +34,10 @@ export default function Trips() {
     <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
       <div className="flex items-end justify-between gap-4">
         <div>
-          <h1 className="text-3xl text-forest sm:text-4xl">ทริปของฉัน</h1>
+          <h1 className="text-gradient-sky pb-1 text-3xl font-semibold sm:text-4xl">ทริปของฉัน</h1>
           <p className="mt-1 text-muted">ทริปที่บันทึกจากเบราว์เซอร์นี้</p>
         </div>
-        <Link to="/planner" className="rounded-full bg-forest px-5 py-2.5 text-sm font-medium text-white hover:bg-forest-deep">วางแผนทริป</Link>
+        <Link to="/planner" className="rounded-full btn-primary px-5 py-2.5 text-sm font-medium text-white">วางแผนทริป</Link>
       </div>
       <div className="mt-8">
         {state.loading && <CardSkeletons n={3} />}
@@ -53,7 +53,7 @@ export default function Trips() {
             const wc = snap.warning_counts || {}
             const nDays = snap.days?.length
             return (
-              <li key={t.id} className="rounded-3xl bg-white p-5 ring-1 ring-forest/10">
+              <li key={t.id} className="rounded-3xl card-sky p-5 ring-1 ring-forest/5">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <h2 className="text-xl text-ink">{t.name}</h2>
@@ -70,7 +70,7 @@ export default function Trips() {
                     <p className="mt-1 text-xs text-muted">แก้ไขล่าสุด {relativeTime(t.updated_at)}</p>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    <Link to={`/trips/${t.id}`} className="rounded-full bg-forest px-4 py-2 text-sm font-medium text-white hover:bg-forest-deep">ดูแผนรายวัน</Link>
+                    <Link to={`/trips/${t.id}`} className="rounded-full btn-primary px-4 py-2 text-sm font-medium text-white">ดูแผนรายวัน</Link>
                     <Link to={`/planner/${t.id}`} className="rounded-full px-4 py-2 text-sm font-medium text-forest ring-1 ring-forest/25 hover:bg-mist">แก้ไข</Link>
                     <button onClick={() => remove(t)} className="rounded-full px-4 py-2 text-sm font-medium text-alert hover:bg-alert-soft">ลบ</button>
                   </div>

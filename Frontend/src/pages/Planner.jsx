@@ -14,7 +14,7 @@ import DayColumn from '../planner/DayColumn'
 import { findBlock, toPayload } from '../planner/planUtils'
 import { useToast, useTrip } from '../store/tripStore'
 
-export const DAY_COLORS = ['#1f4d3a', '#b0573f', '#4a5a8a', '#a87518', '#2f7f86', '#7a4f8a', '#5e8c61']
+export const DAY_COLORS = ['#2067da', '#0ea5e9', '#6366f1', '#14b8a6', '#0369a1', '#8b5cf6', '#06b6d4']
 
 export function routeLayers(trip, schedule, onlyDay = null) {
   const markers = []
@@ -201,7 +201,7 @@ export default function Planner() {
     <div className="mx-auto max-w-[1440px] px-4 py-6 sm:px-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl text-forest">วางแผนทริป</h1>
+          <h1 className="text-gradient-sky pb-1 text-3xl font-semibold">วางแผนทริป</h1>
           <p className="text-sm text-muted">
             {trip.tripId ? (trip.dirty ? 'มีการแก้ไขที่ยังไม่บันทึก' : 'บันทึกแล้ว') : 'แบบร่าง (เก็บไว้ในเบราว์เซอร์นี้จนกว่าจะบันทึก)'}
           </p>
@@ -213,7 +213,7 @@ export default function Planner() {
         </div>
       </div>
 
-      <div className="mt-5 rounded-3xl bg-white p-4 ring-1 ring-forest/10"><TripSettings /></div>
+      <div className="mt-5 rounded-3xl card-sky p-4 ring-1 ring-forest/5"><TripSettings /></div>
 
       <div className="mt-4"><RoutingNotice status={schedule?.routing} compact /></div>
       {computeErr && <div className="mt-3"><ErrorState error={computeErr} /></div>}
@@ -250,14 +250,14 @@ export default function Planner() {
           <div className="grid gap-6 xl:grid-cols-[1fr_360px]">
             <div>
               <div className="mb-2 flex items-center justify-between">
-                <h2 className="text-xl text-forest">เส้นทางวันที่ {trip.activeDay + 1} <span className="font-sans text-sm text-muted">{fmtThaiDate(schedule?.days?.[trip.activeDay]?.date)}</span></h2>
+                <h2 className="text-xl text-ink">เส้นทางวันที่ {trip.activeDay + 1} <span className="font-sans text-sm text-muted">{fmtThaiDate(schedule?.days?.[trip.activeDay]?.date)}</span></h2>
                 {computing && <span className="text-xs text-muted">กำลังคำนวณเวลา…</span>}
               </div>
               <MapView className="h-80 sm:h-96" markers={markers} routes={routes} />
               <p className="mt-1 text-xs text-muted">เส้นประ = ค่าประมาณ (โหมดจำลอง), เส้นทึบ = เส้นทางจริงจากผู้ให้บริการแผนที่</p>
             </div>
-            <div className="rounded-3xl bg-white p-5 ring-1 ring-forest/10">
-              <h2 className="text-xl text-forest">สรุปทั้งทริป</h2>
+            <div className="rounded-3xl card-sky p-5 ring-1 ring-forest/5">
+              <h2 className="text-xl text-ink">สรุปทั้งทริป</h2>
               {schedule ? (
                 <>
                   <dl className="mt-3 grid grid-cols-2 gap-3 text-sm">

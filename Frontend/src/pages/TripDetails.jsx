@@ -42,14 +42,14 @@ export default function TripDetails() {
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-3xl text-forest sm:text-4xl">{trip.name}</h1>
+          <h1 className="text-gradient-sky pb-1 text-3xl font-semibold sm:text-4xl">{trip.name}</h1>
           <p className="mt-1 text-muted">
             {fmtThaiDate(trip.start_date)} ถึง {fmtThaiDate(schedule.days[schedule.days.length - 1].date)}, {trip.days.length} วัน, ระยะทางรวม {schedule.totals.distance_km} กม., เดินทาง {fmtDuration(schedule.totals.travel_min)}
           </p>
         </div>
         <div className="flex gap-2">
           <button onClick={() => window.print()} className="rounded-full px-4 py-2 text-sm font-medium text-forest ring-1 ring-forest/25 hover:bg-mist print:hidden">พิมพ์แผน</button>
-          <Link to={`/planner/${trip.id}`} className="rounded-full bg-forest px-4 py-2 text-sm font-medium text-white hover:bg-forest-deep print:hidden">แก้ไขในตัววางแผน</Link>
+          <Link to={`/planner/${trip.id}`} className="rounded-full btn-primary px-4 py-2 text-sm font-medium text-white print:hidden">แก้ไขในตัววางแผน</Link>
         </div>
       </div>
       <div className="mt-4"><RoutingNotice status={schedule.routing} compact /></div>
@@ -72,7 +72,7 @@ export default function TripDetails() {
             const comp = Object.fromEntries(cd.blocks.map((b) => [b.id, b]))
             return (
               <section key={di}>
-                <h2 className="flex items-center gap-2 text-2xl text-forest">
+                <h2 className="flex items-center gap-2 text-2xl text-ink">
                   <span className="h-3 w-3 rounded-full" style={{ background: DAY_COLORS[di % DAY_COLORS.length] }} aria-hidden="true" />
                   วันที่ {di + 1}
                   <span className="font-sans text-base text-muted">{fmtThaiDate(cd.date)}</span>
@@ -96,7 +96,7 @@ export default function TripDetails() {
                                 เดินทาง {fmtDuration(c.travel.duration_min)}, {fmtKm(c.travel.distance_m)}{c.travel.is_estimate ? ' (ประมาณการ)' : ''}
                               </p>
                             )}
-                            <div className="relative rounded-2xl bg-white px-4 py-3 ring-1 ring-forest/10">
+                            <div className="relative rounded-2xl card-sky px-4 py-3 ring-1 ring-forest/5">
                               <span className={`absolute -left-[23px] top-4 h-3.5 w-3.5 rounded-full border-2 border-white ${st.stripe}`} aria-hidden="true" />
                               <p className="text-sm font-semibold text-forest">{c?.start} – {c?.end}</p>
                               <p className="font-medium">{b.place_id ? <Link className="hover:underline" to={`/place/${encodeURIComponent(b.place_id)}`}>{b.name}</Link> : b.name}</p>

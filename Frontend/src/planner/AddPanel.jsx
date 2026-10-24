@@ -28,7 +28,7 @@ function useActiveDayPoints() {
 
 function ResultRow({ place, onAdd, extra }) {
   return (
-    <li className="flex items-start justify-between gap-2 rounded-xl bg-white p-3 ring-1 ring-forest/10">
+    <li className="flex items-start justify-between gap-2 rounded-xl card-sky p-3 ring-1 ring-forest/5">
       <div className="min-w-0">
         <p className="font-medium leading-snug">{place.name}</p>
         <p className="text-xs text-muted">{place.primary_type ? `${place.primary_type}, ` : ''}{place.province}</p>
@@ -38,7 +38,7 @@ function ResultRow({ place, onAdd, extra }) {
         </div>
         {extra}
       </div>
-      <button onClick={() => onAdd(place)} className="shrink-0 rounded-full bg-forest px-3 py-1.5 text-xs font-medium text-white hover:bg-forest-deep" aria-label={`เพิ่ม ${place.name}`}>
+      <button onClick={() => onAdd(place)} className="shrink-0 rounded-full btn-primary px-3 py-1.5 text-xs font-medium text-white" aria-label={`เพิ่ม ${place.name}`}>
         เพิ่ม
       </button>
     </li>
@@ -212,8 +212,8 @@ export default function AddPanel() {
     push(`เพิ่ม “${place.name}” ลงวันที่ ${activeDay + 1}`)
   }
   return (
-    <div className="rounded-3xl bg-white/70 p-4 ring-1 ring-forest/10">
-      <h2 className="text-lg text-forest">เพิ่มลงวันที่ {activeDay + 1}</h2>
+    <div className="rounded-3xl bg-white/70 p-4 ring-1 ring-forest/5">
+      <h2 className="text-lg text-ink">เพิ่มลงวันที่ {activeDay + 1}</h2>
       <div className="no-scrollbar mt-3 flex gap-1 overflow-x-auto" role="tablist">
         {TABS.map(([k, l]) => (
           <button key={k} role="tab" aria-selected={tab === k} onClick={() => setTab(k)} className={`shrink-0 rounded-full px-3 py-1.5 text-sm font-medium ${tab === k ? 'bg-forest text-white' : 'text-forest hover:bg-mist'}`}>

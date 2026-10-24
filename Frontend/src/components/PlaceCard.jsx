@@ -22,7 +22,7 @@ export default function PlaceCard({ place, rank }) {
   const shown = open ? reasons : reasons.slice(0, 2)
 
   return (
-    <article className="group flex flex-col overflow-hidden rounded-2xl bg-white ring-1 ring-forest/10">
+    <article className="card-sky group flex flex-col overflow-hidden rounded-2xl ring-1 ring-forest/5 transition hover:-translate-y-0.5">
       <Link to={`/place/${encodeURIComponent(place.place_id)}`} className="block" aria-label={place.name}>
         <PlaceArt place={place} className="h-36" />
       </Link>
@@ -68,7 +68,7 @@ export default function PlaceCard({ place, rank }) {
           <button
             onClick={() => add(place)}
             className={`rounded-full px-4 py-2 text-sm font-medium transition ${
-              inTrip ? 'bg-leaf text-forest' : 'bg-forest text-white hover:bg-forest-deep'
+              inTrip ? 'bg-leaf text-forest' : 'btn-primary text-white'
             }`}
           >
             {inTrip ? 'อยู่ในทริปแล้ว (เพิ่มซ้ำ)' : 'เพิ่มลงทริป'}

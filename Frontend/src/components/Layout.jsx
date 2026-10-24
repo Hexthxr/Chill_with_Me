@@ -5,39 +5,59 @@ import { Toasts } from './Bits'
 
 function Logo() {
   return (
-    <Link to="/" className="flex items-center gap-2.5" aria-label="Chill with me หน้าแรก">
-      <svg viewBox="0 0 64 64" className="h-9 w-9" aria-hidden="true">
-        <rect width="64" height="64" rx="16" fill="#1F4D3A" />
-        <path d="M10 44c8-14 14-20 22-20s14 6 22 20" fill="none" stroke="#CFE3C4" strokeWidth="5" strokeLinecap="round" />
-        <path d="M18 50c6-8 9-11 14-11s8 3 14 11" fill="none" stroke="#E8B53A" strokeWidth="4" strokeLinecap="round" />
+    <Link to="/" className="flex items-center gap-2" aria-label="Chill with me หน้าแรก">
+      <svg viewBox="0 0 40 40" className="h-8 w-8" aria-hidden="true">
+        <defs>
+          <linearGradient id="logo-g" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stopColor="#38bdf8" />
+            <stop offset="1" stopColor="#1550b8" />
+          </linearGradient>
+        </defs>
+        <rect width="40" height="40" rx="12" fill="url(#logo-g)" />
+        <path d="M7 24c4-3 7-3 10 0s6 3 9 0 6-3 7-1" fill="none" stroke="#fff" strokeWidth="2.6" strokeLinecap="round" />
+        <path d="M7 30c4-3 7-3 10 0s6 3 9 0 6-3 7-1" fill="none" stroke="#bfe3ff" strokeWidth="2.2" strokeLinecap="round" />
+        <circle cx="27" cy="13" r="4" fill="#fff" />
       </svg>
-      <span className="font-display text-xl text-forest">Chill with me</span>
+      <span className="text-gradient-sky text-lg font-semibold tracking-wide">CHILL WITH ME</span>
     </Link>
+  )
+}
+
+function FooterWave() {
+  return (
+    <svg viewBox="0 0 1440 80" preserveAspectRatio="none" className="block h-10 w-full sm:h-16" aria-hidden="true">
+      <path d="M0 40c120 25 240 38 360 30S600 30 720 28s240 22 360 26 240-10 360-24v50H0z" fill="#2067da" opacity=".25" />
+      <path d="M0 52c160 18 300 22 440 12s260-30 400-28 280 26 400 24 160-12 200-18v38H0z" fill="#2067da" />
+    </svg>
   )
 }
 
 const links = [
   { to: '/recommend', label: 'ค้นหาที่เที่ยว' },
-  { to: '/planner', label: 'วางแผนทริป' },
   { to: '/trips', label: 'ทริปของฉัน' },
+  { to: '/planner', label: 'วางแผนทริป', pill: true },
 ]
 
 export default function Layout() {
   const [open, setOpen] = useState(false)
   const count = useTrip((s) => s.days.reduce((n, d) => n + d.blocks.length, 0))
   const navCls = ({ isActive }) =>
-    `rounded-full px-4 py-2 text-[15px] font-medium transition ${isActive ? 'bg-forest text-white' : 'text-forest hover:bg-mist'}`
+    `rounded-full px-4 py-2 text-[15px] transition ${isActive ? 'bg-leaf font-medium text-forest' : 'text-forest hover:bg-mist'}`
   return (
     <div className="flex min-h-screen flex-col">
       <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-2 focus:z-50 focus:rounded focus:bg-white focus:px-3 focus:py-1">
         ข้ามไปเนื้อหา
       </a>
-      <header className="sticky top-0 z-[1000] border-b border-forest/10 bg-cream/90 backdrop-blur">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
+      <header className="sticky top-0 z-[1000] border-b border-forest/10 bg-white/85 backdrop-blur-md">
+        <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6">
           <Logo />
           <nav className="hidden items-center gap-1 md:flex" aria-label="เมนูหลัก">
             {links.map((l) => (
-              <NavLink key={l.to} to={l.to} className={navCls}>
+              <NavLink
+                key={l.to}
+                to={l.to}
+                className={l.pill ? ({ isActive }) => `ml-2 rounded-full px-5 py-1.5 text-[15px] ring-1 ring-forest/40 transition ${isActive ? 'bg-forest text-white' : 'text-forest hover:bg-mist'}` : navCls}
+              >
                 {l.label}
                 {l.to === '/planner' && count > 0 && (
                   <span className="ml-1.5 rounded-full bg-sun px-1.5 text-xs text-ink">{count}</span>
@@ -65,10 +85,25 @@ export default function Layout() {
       <main id="main" className="flex-1">
         <Outlet />
       </main>
-      <footer className="mt-16 border-t border-forest/10 bg-white/60">
-        <div className="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-6 text-sm text-muted sm:flex-row sm:justify-between sm:px-6">
-          <p>Chill with me — แนะนำที่เที่ยวจากข้อมูลรีวิวจริง วิเคราะห์ด้วย Machine Learning</p>
-          <p>ภาพประกอบการ์ดเป็นลายเส้นที่สร้างขึ้น ไม่ใช่ภาพถ่ายของสถานที่</p>
+      <footer className="mt-20">
+        <FooterWave />
+        <div className="bg-forest text-white">
+          <div className="mx-auto grid max-w-7xl gap-6 px-4 py-10 sm:grid-cols-[1.4fr_1fr] sm:px-6">
+            <div>
+              <p className="text-lg font-semibold tracking-wide">CHILL WITH ME</p>
+              <p className="mt-2 max-w-md text-sm text-white/80">
+                แนะนำที่เที่ยวทั่วไทยจากข้อมูลรีวิวจริง วิเคราะห์ด้วย Machine Learning และวางแผนทริปแบบลากวางที่คำนวณเวลาให้เอง
+              </p>
+            </div>
+            <nav className="flex flex-wrap gap-x-6 gap-y-2 text-sm sm:justify-end" aria-label="ลิงก์ท้ายหน้า">
+              <Link to="/recommend" className="text-white/90 hover:text-white hover:underline">ค้นหาที่เที่ยว</Link>
+              <Link to="/planner" className="text-white/90 hover:text-white hover:underline">วางแผนทริป</Link>
+              <Link to="/trips" className="text-white/90 hover:text-white hover:underline">ทริปของฉัน</Link>
+            </nav>
+          </div>
+          <div className="border-t border-white/15">
+            <p className="mx-auto max-w-7xl px-4 py-4 text-xs text-white/70 sm:px-6">ภาพประกอบการ์ดเป็นลายเส้นที่สร้างขึ้น ไม่ใช่ภาพถ่ายของสถานที่</p>
+          </div>
         </div>
       </footer>
       <Toasts />

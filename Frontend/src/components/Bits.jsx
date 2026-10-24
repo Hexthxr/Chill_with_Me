@@ -101,7 +101,7 @@ export function Toasts() {
 
 export function Button({ variant = 'primary', className = '', ...props }) {
   const v = {
-    primary: 'bg-forest text-white hover:bg-forest-deep disabled:bg-moss/50',
+    primary: 'btn-primary disabled:opacity-50',
     ghost: 'bg-white text-forest ring-1 ring-forest/20 hover:ring-forest/50 disabled:opacity-50',
     sun: 'bg-sun text-ink hover:brightness-95 disabled:opacity-50',
     danger: 'bg-white text-alert ring-1 ring-alert/30 hover:bg-alert-soft',
