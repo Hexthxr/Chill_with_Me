@@ -1,0 +1,58 @@
+@import "tailwindcss";
+@import "@fontsource/pridi/400.css";
+@import "@fontsource/pridi/600.css";
+@import "@fontsource/anuphan/400.css";
+@import "@fontsource/anuphan/500.css";
+@import "@fontsource/anuphan/600.css";
+@import "leaflet/dist/leaflet.css";
+
+@theme {
+  --font-display: "Pridi", "Noto Serif Thai", Georgia, serif;
+  --font-sans: "Anuphan", "Noto Sans Thai", system-ui, sans-serif;
+
+  --color-forest: #1f4d3a;
+  --color-forest-deep: #143628;
+  --color-moss: #5e8c61;
+  --color-leaf: #cfe3c4;
+  --color-mist: #e7efe0;
+  --color-cream: #f4f2e6;
+  --color-sand: #e9e4cf;
+  --color-ink: #1b2a22;
+  --color-muted: #5b6b61;
+  --color-sun: #e8b53a;
+  --color-sun-soft: #f8ecc8;
+  --color-alert: #b4442f;
+  --color-alert-soft: #f6e1db;
+}
+
+html { -webkit-text-size-adjust: 100%; }
+body {
+  background: var(--color-cream);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  line-height: 1.6;
+}
+h1, h2, h3 { font-family: var(--font-display); line-height: 1.25; }
+
+:focus-visible { outline: 3px solid var(--color-sun); outline-offset: 2px; border-radius: 6px; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+
+.leaflet-container { font-family: var(--font-sans); background: var(--color-mist); }
+.num-marker {
+  background: var(--color-forest); color: #fff; border: 2px solid #fff; border-radius: 999px;
+  width: 28px; height: 28px; display: grid; place-items: center; font-weight: 600; font-size: 13px;
+  box-shadow: 0 1px 4px rgba(20, 54, 40, 0.4);
+}
+.num-marker.kind-hotel { background: #4a5a8a; }
+.num-marker.kind-food { background: #9a6b2f; }
+.num-marker.start { background: var(--color-sun); color: var(--color-ink); }
+
+.trail-line { background-image: linear-gradient(var(--color-moss) 50%, transparent 0); background-size: 2px 10px; }
+
+.skeleton { background: linear-gradient(90deg, var(--color-sand) 0%, #f2eedd 50%, var(--color-sand) 100%); background-size: 200% 100%; animation: shimmer 1.4s infinite; }
+@keyframes shimmer { to { background-position: -200% 0; } }
+
+.no-scrollbar::-webkit-scrollbar { display: none; }

@@ -1,0 +1,160 @@
+{
+  "model": "TF-IDF (PyThaiNLP newmm word uni+bigram + char_wb 2-4) + LogisticRegression(C=4, class_weight=balanced)",
+  "labeling": "Google reviews: rating>=4 positive, rating<=2 negative, 3-star excluded",
+  "n_labelled": 56491,
+  "class_counts": {
+    "positive": 53054,
+    "negative": 3437
+  },
+  "split": {
+    "train": 39543,
+    "validation": 5649,
+    "test": 11299
+  },
+  "threshold": 0.4,
+  "validation_f1_macro_at_threshold": 0.8408,
+  "test": {
+    "f1_macro": 0.8401,
+    "f1_positive": 0.9807,
+    "f1_negative": 0.6995,
+    "precision_negative": 0.7062,
+    "recall_negative": 0.6929,
+    "accuracy": 0.9638
+  },
+  "test_at_threshold_0_5": {
+    "f1_macro": 0.8316,
+    "f1_positive": 0.9782,
+    "f1_negative": 0.6849,
+    "precision_negative": 0.6468,
+    "recall_negative": 0.7278,
+    "accuracy": 0.9593
+  },
+  "baseline_stratified_random_test": {
+    "f1_macro": 0.4973,
+    "f1_positive": 0.9399,
+    "f1_negative": 0.0548,
+    "precision_negative": 0.0557,
+    "recall_negative": 0.0539,
+    "accuracy": 0.887
+  },
+  "confusion_matrix_test": {
+    "labels": [
+      "negative",
+      "positive"
+    ],
+    "matrix": [
+      [
+        476,
+        211
+      ],
+      [
+        198,
+        10414
+      ]
+    ]
+  },
+  "classification_report_test": {
+    "negative": {
+      "precision": 0.7062314540059347,
+      "recall": 0.6928675400291121,
+      "f1-score": 0.6994856722997795,
+      "support": 687.0
+    },
+    "positive": {
+      "precision": 0.9801411764705882,
+      "recall": 0.9813418771202412,
+      "f1-score": 0.9807411592974525,
+      "support": 10612.0
+    },
+    "accuracy": 0.9638021063810956,
+    "macro avg": {
+      "precision": 0.8431863152382615,
+      "recall": 0.8371047085746767,
+      "f1-score": 0.8401134157986161,
+      "support": 11299.0
+    },
+    "weighted avg": {
+      "precision": 0.9634869611123071,
+      "recall": 0.9638021063810956,
+      "f1-score": 0.96364030793296,
+      "support": 11299.0
+    }
+  },
+  "feature_count": 257021,
+  "cleaning": {
+    "loaded": 60529,
+    "after_empty_and_duplicate_removal": 60316
+  },
+  "indicative_terms": {
+    "negative": [
+      "แย่มาก",
+      "ไม่",
+      "แย่",
+      "ปิด",
+      "ดีมาก ค่ะ",
+      "ไม่ สะอาด",
+      "ร้าง",
+      "สกปรก",
+      "ไม่ แนะนำ",
+      "ไม่ คุ้มค่า",
+      "ไม่ คุ้ม",
+      "วิว สวย",
+      "อร่อย บรรยากาศ",
+      "ไม่ อร่อย",
+      "บรรยากาศ ดีมาก",
+      "ฝุ่น",
+      "รกร้าง",
+      "สวน บริการ",
+      "ตู้เย็น ทีวี",
+      "ดี ปลอดภัย",
+      "ดีกว่า",
+      "เสียความรู้สึก",
+      "อันตราย",
+      "เที่ยว ทะเล",
+      "ธรรมชาติ สวยงาม"
+    ],
+    "positive": [
+      "ใส",
+      "ดีมาก",
+      "สวย",
+      "ชอบ",
+      "น่ารัก",
+      "ไม่ แพง",
+      "ใจดี",
+      "ไม่ ผิดหวัง",
+      "ไม่ ไกล",
+      "สวย มาก",
+      "สบาย",
+      "นิด",
+      "ถูก มาก",
+      "แน่นอน",
+      "น้อง",
+      "แมว",
+      "ลาน",
+      "มาก เลย",
+      "เย็น",
+      "สงบ",
+      "ครบ",
+      "ไม่ เยอะ",
+      "ไม่ เสีย",
+      "เลย ครับ",
+      "ดี ค่ะ"
+    ]
+  },
+  "recommender": {
+    "places": 22947,
+    "vocabulary": 24110,
+    "places_with_review_text": 15233,
+    "global_mean_pos_prob": 0.894,
+    "rating_prior_mean": 4.4883,
+    "interests": {
+      "sea": "ทะเล",
+      "mountain": "ภูเขา",
+      "nature": "ธรรมชาติ",
+      "cafe": "คาเฟ่",
+      "culture": "วัฒนธรรม",
+      "family": "ครอบครัว"
+    }
+  },
+  "built_at": "2026-10-24T05:48:22.285046+00:00"
+}
