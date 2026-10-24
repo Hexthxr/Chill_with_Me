@@ -1,3 +1,5 @@
+import { useAuth } from '../store/authStore'
+
 const BASE = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '')
 
 export class ApiError extends Error {
@@ -21,10 +23,14 @@ async function request(path, { method = 'GET', body, params, signal } = {}) {
   }
   let res
   try {
+    const headers = {}
+    if (body) headers['Content-Type'] = 'application/json'
+    const token = useAuth.getState().token
+    if (token) headers.Authorization = `Bearer ${token}`
     res = await fetch(url, {
       method,
       signal,
-      headers: body ? { 'Content-Type': 'application/json' } : undefined,
+      headers,
       body: body ? JSON.stringify(body) : undefined,
     })
   } catch (e) {
@@ -38,6 +44,7 @@ async function request(path, { method = 'GET', body, params, signal } = {}) {
   } catch {
     /* non-JSON */
   }
+  if (res.status === 401 && useAuth.getState().token) useAuth.getState().clear() // session expired / revoked
   if (!res.ok) {
     const err = data?.error || {}
     throw new ApiError(res.status, err.code || 'http_error', err.message || `คำขอล้มเหลว (${res.status})`, err.details)
@@ -46,6 +53,17 @@ async function request(path, { method = 'GET', body, params, signal } = {}) {
 }
 
 export const api = {
+  authConfig: () => request('/api/auth/config'),
+  registerStart: (body) => request('/api/auth/register/start', { method: 'POST', body }),
+  loginStart: (body) => request('/api/auth/login/start', { method: 'POST', body }),
+  loginPassword: (body) => request('/api/auth/login', { method: 'POST', body }),
+  resetStart: (body) => request('/api/auth/password/reset/start', { method: 'POST', body }),
+  changePassword: (body) => request('/api/auth/password', { method: 'POST', body }),
+  resendOtp: (request_id) => request('/api/auth/resend', { method: 'POST', body: { request_id } }),
+  verifyOtp: (body) => request('/api/auth/verify', { method: 'POST', body }),
+  me: () => request('/api/auth/me'),
+  updateMe: (body) => request('/api/auth/me', { method: 'PATCH', body }),
+  logout: () => request('/api/auth/logout', { method: 'POST' }),
   health: () => request('/api/health'),
   stats: () => request('/api/meta/stats'),
   provinces: () => request('/api/meta/provinces'),

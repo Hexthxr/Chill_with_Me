@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { Link, NavLink, Outlet } from 'react-router-dom'
+import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
+import { useAuth } from '../store/authStore'
 import { useTrip } from '../store/tripStore'
 import { Toasts } from './Bits'
 
@@ -34,9 +35,39 @@ function FooterWave() {
 
 const links = [
   { to: '/recommend', label: 'ค้นหาที่เที่ยว' },
+  { to: '/planner', label: 'วางแผนทริป' },
   { to: '/trips', label: 'ทริปของฉัน' },
-  { to: '/planner', label: 'วางแผนทริป', pill: true },
 ]
+
+function AccountArea({ mobile = false, onNavigate }) {
+  const user = useAuth((s) => s.user)
+  const token = useAuth((s) => s.token)
+  const loc = useLocation()
+  const here = encodeURIComponent(loc.pathname + loc.search)
+  const redirect = ['/login', '/register'].includes(loc.pathname) ? '' : `?redirect=${here}`
+  if (token && user) {
+    return (
+      <Link
+        to="/account"
+        onClick={onNavigate}
+        className={`flex items-center gap-2 rounded-full py-1 pl-1 pr-3 text-[15px] text-ink ring-1 ring-forest/15 hover:bg-mist ${mobile ? 'w-fit' : 'ml-2'}`}
+      >
+        <span className="btn-primary grid h-8 w-8 place-items-center rounded-full text-sm font-semibold">{user.name.trim().charAt(0)}</span>
+        <span className="max-w-32 truncate">{user.name}</span>
+      </Link>
+    )
+  }
+  return (
+    <div className={`flex items-center gap-2 ${mobile ? '' : 'ml-2'}`}>
+      <Link to={`/login${redirect}`} onClick={onNavigate} className="rounded-full px-4 py-2 text-[15px] text-forest hover:bg-mist">
+        เข้าสู่ระบบ
+      </Link>
+      <Link to={`/register${redirect}`} onClick={onNavigate} className="rounded-full px-5 py-1.5 text-[15px] text-forest ring-1 ring-forest/40 hover:bg-mist">
+        สมัครสมาชิก
+      </Link>
+    </div>
+  )
+}
 
 export default function Layout() {
   const [open, setOpen] = useState(false)
@@ -51,12 +82,12 @@ export default function Layout() {
       <header className="sticky top-0 z-[1000] border-b border-forest/10 bg-white/85 backdrop-blur-md">
         <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6">
           <Logo />
-          <nav className="hidden items-center gap-1 md:flex" aria-label="เมนูหลัก">
+          <nav className="hidden items-center gap-1 lg:flex" aria-label="เมนูหลัก">
             {links.map((l) => (
               <NavLink
                 key={l.to}
                 to={l.to}
-                className={l.pill ? ({ isActive }) => `ml-2 rounded-full px-5 py-1.5 text-[15px] ring-1 ring-forest/40 transition ${isActive ? 'bg-forest text-white' : 'text-forest hover:bg-mist'}` : navCls}
+                className={navCls}
               >
                 {l.label}
                 {l.to === '/planner' && count > 0 && (
@@ -64,21 +95,25 @@ export default function Layout() {
                 )}
               </NavLink>
             ))}
+            <AccountArea />
           </nav>
-          <button className="rounded-lg p-2 text-forest md:hidden" onClick={() => setOpen(!open)} aria-expanded={open} aria-label="เปิดเมนู">
+          <button className="rounded-lg p-2 text-forest lg:hidden" onClick={() => setOpen(!open)} aria-expanded={open} aria-label="เปิดเมนู">
             <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2">
               <path d={open ? 'M6 6l12 12M18 6L6 18' : 'M4 7h16M4 12h16M4 17h16'} strokeLinecap="round" />
             </svg>
           </button>
         </div>
         {open && (
-          <nav className="flex flex-col gap-1 border-t border-forest/10 px-4 py-3 md:hidden" aria-label="เมนูหลัก (มือถือ)">
+          <nav className="flex flex-col gap-1 border-t border-forest/10 px-4 py-3 lg:hidden" aria-label="เมนูหลัก (มือถือ)">
             {links.map((l) => (
               <NavLink key={l.to} to={l.to} className={navCls} onClick={() => setOpen(false)}>
                 {l.label}
                 {l.to === '/planner' && count > 0 && <span className="ml-1.5 rounded-full bg-sun px-1.5 text-xs text-ink">{count}</span>}
               </NavLink>
             ))}
+            <div className="mt-2 border-t border-forest/10 pt-3">
+              <AccountArea mobile onNavigate={() => setOpen(false)} />
+            </div>
           </nav>
         )}
       </header>

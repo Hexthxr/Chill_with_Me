@@ -1,7 +1,11 @@
 import { Link, Route, Routes } from 'react-router-dom'
 import Layout from './components/Layout'
 import { EmptyState } from './components/States'
+import Account from './pages/Account'
+import ForgotPassword from './pages/ForgotPassword'
 import Home from './pages/Home'
+import Login from './pages/Login'
+import Register from './pages/Register'
 import PlaceDetail from './pages/PlaceDetail'
 import Planner from './pages/Planner'
 import Recommend from './pages/Recommend'
@@ -27,6 +31,10 @@ export default function App() {
         <Route path="planner/:id" element={<Planner />} />
         <Route path="trips" element={<Trips />} />
         <Route path="trips/:id" element={<TripDetails />} />
+        <Route path="login" element={<Login />} />
+        <Route path="register" element={<Register />} />
+        <Route path="forgot-password" element={<ForgotPassword />} />
+        <Route path="account" element={<Account />} />
         <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>

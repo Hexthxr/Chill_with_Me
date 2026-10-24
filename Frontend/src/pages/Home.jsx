@@ -6,6 +6,7 @@ import PlaceCard from '../components/PlaceCard'
 import { CardSkeletons, EmptyState, ErrorState } from '../components/States'
 import { api } from '../lib/api'
 import { addDaysISO, fmtInt, fmtThaiDate, todayISO } from '../lib/format'
+import { useAuth } from '../store/authStore'
 import { useToast, useTrip } from '../store/tripStore'
 
 /* ------------------------------------------------------------------ search card */
@@ -242,21 +243,38 @@ function UnderlineTabs({ items, value, onChange, label }) {
 
 function ForYou() {
   const interests = useInterests()
-  const [tab, setTab] = useState('nature')
+  const user = useAuth((s) => s.user)
+  const mine = user?.interests?.length ? user.interests : null
+  const [tab, setTab] = useState(mine ? 'mine' : 'nature')
   const [state, setState] = useState({ loading: true })
+  useEffect(() => {
+    setTab(mine ? 'mine' : 'nature')
+  }, [mine?.join(',')]) // eslint-disable-line react-hooks/exhaustive-deps
+  const query = tab === 'mine' && mine ? mine.join(',') : tab
   const load = () => {
     setState({ loading: true })
-    api.recommend({ interests: tab, limit: 6 }).then((d) => setState({ items: d.items })).catch((error) => setState({ error }))
+    api.recommend({ interests: query, limit: 6 }).then((d) => setState({ items: d.items })).catch((error) => setState({ error }))
   }
-  useEffect(load, [tab]) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(load, [query]) // eslint-disable-line react-hooks/exhaustive-deps
+  const labels = Object.fromEntries(interests.map((i) => [i.key, i.label]))
+  const tabs = [...(mine ? [{ key: 'mine', label: 'ตามที่คุณสนใจ' }] : []), ...interests.map((i) => ({ key: i.key, label: i.label }))]
   return (
     <section className="mx-auto mt-14 max-w-6xl rounded-[32px] px-4 py-10 sm:px-8 band-sky">
       <SectionTitle
-        title="แนะนำสถานที่เที่ยวสำหรับคุณ"
-        sub="จัดอันดับด้วย ML จากเนื้อหารีวิว คะแนน และสัดส่วนรีวิวเชิงบวก"
-        right={<Link to={`/recommend?interests=${tab}`} className="text-sm text-forest hover:underline">ดูทั้งหมดในหมวดนี้</Link>}
+        title={user ? `แนะนำสำหรับคุณ${user.name}` : 'แนะนำสถานที่เที่ยวสำหรับคุณ'}
+        sub={
+          tab === 'mine' && mine
+            ? `จัดอันดับด้วย ML ตามความสนใจของคุณ: ${mine.map((k) => labels[k] || k).join(', ')}`
+            : 'จัดอันดับด้วย ML จากเนื้อหารีวิว คะแนน และสัดส่วนรีวิวเชิงบวก'
+        }
+        right={<Link to={`/recommend?interests=${query}`} className="text-sm text-forest hover:underline">ดูทั้งหมดในหมวดนี้</Link>}
       />
-      <UnderlineTabs label="หมวดความสนใจ" value={tab} onChange={setTab} items={interests.map((i) => ({ key: i.key, label: i.label }))} />
+      {!user && (
+        <p className="-mt-2 mb-4 text-sm text-muted">
+          <Link to="/register" className="font-medium text-forest hover:underline">สมัครสมาชิก</Link> แล้วบอกความสนใจ เพื่อให้หน้านี้แนะนำตรงกับคุณมากขึ้น
+        </p>
+      )}
+      <UnderlineTabs label="หมวดความสนใจ" value={tab} onChange={setTab} items={tabs} />
       <div className="mt-6">
         {state.loading && <CardSkeletons n={3} />}
         {state.error && <ErrorState error={state.error} onRetry={load} />}

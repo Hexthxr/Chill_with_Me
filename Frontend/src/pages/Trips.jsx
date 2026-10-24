@@ -4,6 +4,7 @@ import { CardSkeletons, EmptyState, ErrorState } from '../components/States'
 import { api } from '../lib/api'
 import { fmtDuration, fmtThaiDate, relativeTime } from '../lib/format'
 import { getOwnerKey } from '../lib/ownerKey'
+import { useAuth } from '../store/authStore'
 import { useToast, useTrip } from '../store/tripStore'
 
 export default function Trips() {
@@ -11,12 +12,13 @@ export default function Trips() {
   const push = useToast((s) => s.push)
   const currentId = useTrip((s) => s.tripId)
   const resetDraft = useTrip((s) => s.reset)
+  const user = useAuth((s) => s.user)
 
   const load = () => {
     setState({ loading: true })
     api.listTrips({ owner_key: getOwnerKey() }).then(setState).catch((error) => setState({ error }))
   }
-  useEffect(load, [])
+  useEffect(load, [user?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const remove = async (t) => {
     if (!window.confirm(`ลบทริป “${t.name}” ออกจากฐานข้อมูล?`)) return
@@ -35,10 +37,19 @@ export default function Trips() {
       <div className="flex items-end justify-between gap-4">
         <div>
           <h1 className="text-gradient-sky pb-1 text-3xl font-semibold sm:text-4xl">ทริปของฉัน</h1>
-          <p className="mt-1 text-muted">ทริปที่บันทึกจากเบราว์เซอร์นี้</p>
+          <p className="mt-1 text-muted">{user ? `ทริปในบัญชีของ ${user.name}` : 'ทริปที่บันทึกจากเบราว์เซอร์นี้'}</p>
         </div>
         <Link to="/planner" className="rounded-full btn-primary px-5 py-2.5 text-sm font-medium text-white">วางแผนทริป</Link>
       </div>
+      {!user && (
+        <div className="mt-6 flex flex-col gap-3 rounded-2xl bg-leaf/60 px-5 py-4 text-sm sm:flex-row sm:items-center sm:justify-between">
+          <p>เข้าสู่ระบบเพื่อเก็บทริปไว้ในบัญชีและเปิดได้ทุกเครื่อง ทริปที่บันทึกไว้ในเบราว์เซอร์นี้จะถูกย้ายเข้าบัญชีให้อัตโนมัติ</p>
+          <div className="flex shrink-0 gap-2">
+            <Link to="/login?redirect=/trips" className="rounded-full px-4 py-2 font-medium text-forest ring-1 ring-forest/30 hover:bg-white">เข้าสู่ระบบ</Link>
+            <Link to="/register?redirect=/trips" className="btn-primary rounded-full px-4 py-2 font-medium">สมัครสมาชิก</Link>
+          </div>
+        </div>
+      )}
       <div className="mt-8">
         {state.loading && <CardSkeletons n={3} />}
         {state.error && <ErrorState error={state.error} onRetry={load} />}

@@ -4,12 +4,13 @@ from datetime import datetime, timezone
 
 from bson import ObjectId
 from bson.errors import InvalidId
-from fastapi import APIRouter, Query, Response
+from fastapi import APIRouter, Depends, Query, Response
 
 from ..db import get_db
 from ..errors import APIError
 from ..schemas.trip import TripCreate
 from ..serializers import jsonable
+from ..services.auth import optional_user
 from ..services.planner import compute_schedule
 from ..services.routing import RoutingError, RoutingService
 
@@ -52,18 +53,35 @@ def _doc(trip: TripCreate) -> dict:
     return d
 
 
+def _check_owner(trip_doc: dict, user: dict | None) -> None:
+    owner = trip_doc.get("user_id")
+    if owner is not None and (user is None or user["_id"] != owner):
+        raise APIError(403, "forbidden", "ทริปนี้เป็นของบัญชีอื่น กรุณาเข้าสู่ระบบด้วยบัญชีเจ้าของทริป")
+
+
 @router.post("", status_code=201)
-async def create_trip(trip: TripCreate):
+async def create_trip(trip: TripCreate, user: dict | None = Depends(optional_user)):
     now = datetime.now(timezone.utc)
-    doc = {**_doc(trip), "schedule_snapshot": await _snapshot(trip), "created_at": now, "updated_at": now}
+    doc = {**_doc(trip), "user_id": user["_id"] if user else None,
+           "schedule_snapshot": await _snapshot(trip), "created_at": now, "updated_at": now}
     res = await get_db().trips.insert_one(doc)
     doc["_id"] = res.inserted_id
     return _out(doc)
 
 
 @router.get("")
-async def list_trips(owner_key: str | None = Query(None, max_length=64), limit: int = Query(50, ge=1, le=200)):
-    f = {"owner_key": owner_key} if owner_key else {}
+async def list_trips(
+    owner_key: str | None = Query(None, max_length=64),
+    limit: int = Query(50, ge=1, le=200),
+    user: dict | None = Depends(optional_user),
+):
+    """Logged in: the account's trips. Anonymous: trips saved from this browser (owner_key) not yet tied to an account."""
+    if user:
+        f = {"user_id": user["_id"]}
+    elif owner_key:
+        f = {"owner_key": owner_key, "user_id": None}
+    else:
+        return {"items": []}
     cur = get_db().trips.find(f, {"days": 0}).sort([("updated_at", -1)]).limit(limit)
     return {"items": [_out(d) async for d in cur]}
 
@@ -77,22 +95,27 @@ async def get_trip(trip_id: str):
 
 
 @router.put("/{trip_id}")
-async def update_trip(trip_id: str, trip: TripCreate):
+async def update_trip(trip_id: str, trip: TripCreate, user: dict | None = Depends(optional_user)):
     oid = _oid(trip_id)
     db = get_db()
-    existing = await db.trips.find_one({"_id": oid}, {"created_at": 1})
+    existing = await db.trips.find_one({"_id": oid}, {"created_at": 1, "user_id": 1})
     if not existing:
         raise APIError(404, "not_found", "ไม่พบทริปนี้")
-    doc = {**_doc(trip), "schedule_snapshot": await _snapshot(trip), "updated_at": datetime.now(timezone.utc),
-           "created_at": existing["created_at"]}
+    _check_owner(existing, user)
+    owner = existing.get("user_id") or (user["_id"] if user else None)
+    doc = {**_doc(trip), "user_id": owner, "schedule_snapshot": await _snapshot(trip),
+           "updated_at": datetime.now(timezone.utc), "created_at": existing["created_at"]}
     await db.trips.replace_one({"_id": oid}, doc)
     doc["_id"] = oid
     return _out(doc)
 
 
 @router.delete("/{trip_id}", status_code=204)
-async def delete_trip(trip_id: str):
-    res = await get_db().trips.delete_one({"_id": _oid(trip_id)})
-    if res.deleted_count == 0:
+async def delete_trip(trip_id: str, user: dict | None = Depends(optional_user)):
+    oid = _oid(trip_id)
+    existing = await get_db().trips.find_one({"_id": oid}, {"user_id": 1})
+    if not existing:
         raise APIError(404, "not_found", "ไม่พบทริปนี้")
+    _check_owner(existing, user)
+    await get_db().trips.delete_one({"_id": oid})
     return Response(status_code=204)

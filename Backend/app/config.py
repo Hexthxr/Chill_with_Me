@@ -52,6 +52,34 @@ class Settings:
     routing_fallback_to_mock: bool = field(default_factory=lambda: _bool("ROUTING_FALLBACK_TO_MOCK", True))
     routing_timeout_s: float = field(default_factory=lambda: float(os.getenv("ROUTING_TIMEOUT_S", "12")))
 
+    # ---- auth / OTP
+    auth_secret: str = field(default_factory=lambda: os.getenv("AUTH_SECRET", ""))
+    sms_provider: str = field(default_factory=lambda: os.getenv("SMS_PROVIDER", "auto").lower())  # auto|thaibulksms|twilio_verify|twilio|console
+    twilio_account_sid: str = field(default_factory=lambda: os.getenv("TWILIO_ACCOUNT_SID", ""))
+    twilio_auth_token: str = field(default_factory=lambda: os.getenv("TWILIO_AUTH_TOKEN", ""))
+    twilio_from: str = field(default_factory=lambda: os.getenv("TWILIO_FROM", ""))
+    twilio_verify_service_sid: str = field(default_factory=lambda: os.getenv("TWILIO_VERIFY_SERVICE_SID", ""))
+    thaibulksms_otp_key: str = field(default_factory=lambda: os.getenv("THAIBULKSMS_OTP_KEY", ""))
+    thaibulksms_otp_secret: str = field(default_factory=lambda: os.getenv("THAIBULKSMS_OTP_SECRET", ""))
+    thaibulksms_otp_length: int = field(default_factory=lambda: int(os.getenv("THAIBULKSMS_OTP_LENGTH", "6")))
+    otp_ttl_s: int = field(default_factory=lambda: int(os.getenv("OTP_TTL_S", "300")))
+    otp_resend_s: int = field(default_factory=lambda: int(os.getenv("OTP_RESEND_S", "60")))
+    otp_max_attempts: int = field(default_factory=lambda: int(os.getenv("OTP_MAX_ATTEMPTS", "5")))
+    otp_max_per_hour: int = field(default_factory=lambda: int(os.getenv("OTP_MAX_PER_HOUR", "5")))
+    otp_dev_show_code: bool = field(default_factory=lambda: _bool("OTP_DEV_SHOW_CODE", True))
+    session_days: int = field(default_factory=lambda: int(os.getenv("SESSION_DAYS", "30")))
+
+    def resolved_sms_provider(self) -> str:
+        if self.sms_provider in {"thaibulksms", "twilio_verify", "twilio", "console"}:
+            return self.sms_provider
+        if self.thaibulksms_otp_key and self.thaibulksms_otp_secret:
+            return "thaibulksms"
+        if self.twilio_account_sid and self.twilio_auth_token and self.twilio_verify_service_sid:
+            return "twilio_verify"
+        if self.twilio_account_sid and self.twilio_auth_token and self.twilio_from:
+            return "twilio"
+        return "console"
+
     cors_origins: list[str] = field(
         default_factory=lambda: [
             o.strip()
