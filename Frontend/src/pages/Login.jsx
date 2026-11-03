@@ -4,6 +4,7 @@ import { AuthShell, Field, inputCls, PasswordInput } from '../components/AuthShe
 import OtpStep from '../components/OtpStep'
 import { api } from '../lib/api'
 import { getOwnerKey } from '../lib/ownerKey'
+import { useAuthConfig } from '../lib/useAuthConfig'
 import { useAuth } from '../store/authStore'
 import { useToast } from '../store/tripStore'
 import { isThaiMobile } from './Register'
@@ -20,6 +21,7 @@ export default function Login() {
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState(null)
   const [otp, setOtp] = useState(null)
+  const otpOn = !!useAuthConfig()?.otp_enabled
   const redirect = sp.get('redirect') || '/'
   const qs = sp.get('redirect') ? `?redirect=${encodeURIComponent(redirect)}` : ''
   const phoneErr = touched && !isThaiMobile(phone) ? 'กรอกเบอร์มือถือ 10 หลัก เช่น 0812345678' : null
@@ -62,7 +64,7 @@ export default function Login() {
         <OtpStep key={otp.request_id} otp={otp} onOtpChange={setOtp} onVerified={done} onBack={() => setOtp(null)} backLabel="เปลี่ยนเบอร์โทร" />
       ) : (
         <form onSubmit={submit} className="space-y-5" noValidate>
-          <div className="grid grid-cols-2 gap-1 rounded-2xl bg-mist p-1" role="radiogroup" aria-label="วิธีเข้าสู่ระบบ">
+          {otpOn && <div className="grid grid-cols-2 gap-1 rounded-2xl bg-mist p-1" role="radiogroup" aria-label="วิธีเข้าสู่ระบบ">
             {[
               ['password', 'รหัสผ่าน'],
               ['otp', 'รหัส OTP'],
@@ -71,23 +73,23 @@ export default function Login() {
                 {l}
               </button>
             ))}
-          </div>
+          </div>}
           <Field label="เบอร์โทรศัพท์มือถือ" htmlFor="phone" error={phoneErr}>
             <input id="phone" type="tel" inputMode="tel" value={phone} onChange={(e) => setPhone(e.target.value)} maxLength={15} autoComplete="tel" placeholder="08x-xxx-xxxx" className={inputCls} autoFocus />
           </Field>
           {mode === 'password' && (
             <Field label="รหัสผ่าน" htmlFor="password" error={pwErr}>
               <PasswordInput id="password" value={password} onChange={setPassword} />
-              <div className="mt-1.5 text-right">
+              {otpOn && <div className="mt-1.5 text-right">
                 <Link to={`/forgot-password${phone ? `?phone=${encodeURIComponent(phone)}` : ''}`} className="text-sm text-forest hover:underline">ลืมรหัสผ่าน?</Link>
-              </div>
+              </div>}
             </Field>
           )}
           {err && (
             <p role="alert" className="rounded-xl bg-alert-soft px-4 py-2.5 text-sm text-alert">
               {err.message}{' '}
               {err.code === 'no_account' && <Link to={`/register?phone=${encodeURIComponent(phone)}`} className="font-medium underline">สมัครสมาชิก</Link>}
-              {(err.code === 'account_locked' || err.code === 'no_password') && (
+              {otpOn && (err.code === 'account_locked' || err.code === 'no_password') && (
                 <button type="button" onClick={() => switchMode('otp')} className="font-medium underline">ใช้รหัส OTP</button>
               )}
             </p>

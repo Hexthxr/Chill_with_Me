@@ -87,21 +87,39 @@ PLAN = {
 }
 
 
+def _login(client) -> dict:
+    import random
+
+    from app.services import sms
+
+    from app.routers import auth as auth_router
+
+    if auth_router.settings.otp_enabled and sms.provider() != "console":
+        pytest.skip("needs console SMS mode")
+    phone = "09" + "".join(random.choice("0123456789") for _ in range(8))
+    s = client.post("/api/auth/register/start",
+                    json={"name": "N", "phone": phone, "password": "chill2026"}).json()
+    tok = s.get("token") or client.post("/api/auth/verify", json={"request_id": s["request_id"], "code": s["dev_code"]}).json()["token"]
+    return {"Authorization": f"Bearer {tok}"}
+
+
 def test_planner_and_trip_crud(client):
-    r = client.post("/api/planner/compute", json=PLAN)
+    h = _login(client)
+    assert client.post("/api/planner/compute", json=PLAN).status_code == 401  # guests can't plan
+    r = client.post("/api/planner/compute", json=PLAN, headers=h)
     assert r.status_code == 200
     assert r.json()["days"][0]["blocks"][2]["travel"]["source"] in {"mock", "openrouteservice", "google", "osrm"}
 
-    bad = client.post("/api/planner/compute", json={**PLAN, "start_time": "25:00"})
+    bad = client.post("/api/planner/compute", json={**PLAN, "start_time": "25:00"}, headers=h)
     assert bad.status_code == 422
 
-    created = client.post("/api/trips", json={**PLAN, "owner_key": "pytest"})
+    created = client.post("/api/trips", json=PLAN, headers=h)
     assert created.status_code == 201
     tid = created.json()["id"]
-    assert client.get(f"/api/trips/{tid}").json()["name"] == "ทดสอบ"
-    upd = client.put(f"/api/trips/{tid}", json={**PLAN, "name": "แก้ไขแล้ว", "owner_key": "pytest"})
+    assert client.get(f"/api/trips/{tid}", headers=h).json()["name"] == "ทดสอบ"
+    upd = client.put(f"/api/trips/{tid}", json={**PLAN, "name": "แก้ไขแล้ว"}, headers=h)
     assert upd.json()["name"] == "แก้ไขแล้ว"
-    assert any(t["id"] == tid for t in client.get("/api/trips", params={"owner_key": "pytest"}).json()["items"])
-    assert client.delete(f"/api/trips/{tid}").status_code == 204
-    assert client.get(f"/api/trips/{tid}").status_code == 404
-    assert client.get("/api/trips/not-an-id").status_code == 404
+    assert any(t["id"] == tid for t in client.get("/api/trips", headers=h).json()["items"])
+    assert client.delete(f"/api/trips/{tid}", headers=h).status_code == 204
+    assert client.get(f"/api/trips/{tid}", headers=h).status_code == 404
+    assert client.get("/api/trips/not-an-id", headers=h).status_code == 404

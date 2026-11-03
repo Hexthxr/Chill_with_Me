@@ -62,6 +62,8 @@ class Settings:
     thaibulksms_otp_key: str = field(default_factory=lambda: os.getenv("THAIBULKSMS_OTP_KEY", ""))
     thaibulksms_otp_secret: str = field(default_factory=lambda: os.getenv("THAIBULKSMS_OTP_SECRET", ""))
     thaibulksms_otp_length: int = field(default_factory=lambda: int(os.getenv("THAIBULKSMS_OTP_LENGTH", "6")))
+    # OTP is optional: off = register/login with phone + password only (no SMS, no cost)
+    otp_enabled: bool = field(default_factory=lambda: _bool("OTP_ENABLED", False))
     otp_ttl_s: int = field(default_factory=lambda: int(os.getenv("OTP_TTL_S", "300")))
     otp_resend_s: int = field(default_factory=lambda: int(os.getenv("OTP_RESEND_S", "60")))
     otp_max_attempts: int = field(default_factory=lambda: int(os.getenv("OTP_MAX_ATTEMPTS", "5")))

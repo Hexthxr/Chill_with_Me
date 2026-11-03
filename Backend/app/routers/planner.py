@@ -1,16 +1,18 @@
 from __future__ import annotations
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
 
 from ..db import get_db
 from ..errors import APIError
 from ..schemas.trip import OptimizeRequest, TripPlan
+from ..services.auth import require_user
 from ..services.planner import compute_schedule
 from ..services.route_optimizer import optimize_day
 from ..services.routing import RoutingError, RoutingService
 
-router = APIRouter(prefix="/api", tags=["planner"])
+# Trip planning is for logged-in users only (enforced here, not just hidden in the UI).
+router = APIRouter(prefix="/api", tags=["planner"], dependencies=[Depends(require_user)])
 
 
 @router.post("/planner/compute")

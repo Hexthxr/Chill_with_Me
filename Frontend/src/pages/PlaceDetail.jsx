@@ -7,6 +7,7 @@ import { useAddToTrip } from '../components/PlaceCard'
 import { EmptyState, ErrorState, Spinner } from '../components/States'
 import { api } from '../lib/api'
 import { fmtInt, fmtPct, fmtRating } from '../lib/format'
+import { useAuth } from '../store/authStore'
 
 function AspectBars({ aspects }) {
   if (!aspects?.length) return <p className="text-sm text-muted">รีวิวยังพูดถึงประเด็นเฉพาะไม่มากพอ</p>
@@ -111,6 +112,7 @@ export default function PlaceDetail() {
   const [similar, setSimilar] = useState([])
   const [hotels, setHotels] = useState(null)
   const add = useAddToTrip()
+  const loggedIn = useAuth((s) => !!s.token)
 
   const load = () => {
     setState({ loading: true })
@@ -122,6 +124,10 @@ export default function PlaceDetail() {
     api.similar(id).then((d) => setSimilar(d.items)).catch(() => setSimilar([]))
   }
   useEffect(load, [id]) // eslint-disable-line react-hooks/exhaustive-deps
+  // remember what the user looks at (logged-in users only) for "because you viewed" recommendations
+  useEffect(() => {
+    if (loggedIn) api.logActivity(id, 'view').catch(() => {})
+  }, [id, loggedIn])
 
   if (state.loading) return <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6"><Spinner label="กำลังโหลดข้อมูลสถานที่…" /></div>
   if (state.error)
@@ -149,7 +155,7 @@ export default function PlaceDetail() {
             {p.ml.top_interest_label && <span className="rounded-full bg-mist px-2.5 py-0.5 text-xs font-medium text-forest">เด่นด้าน{p.ml.top_interest_label}</span>}
           </div>
           <div className="mt-5 flex flex-wrap gap-2">
-            <button onClick={() => add(p)} className="rounded-full btn-primary px-5 py-2.5 text-sm font-medium text-white">เพิ่มลงทริป</button>
+            {loggedIn && <button onClick={() => add(p)} className="rounded-full btn-primary px-5 py-2.5 text-sm font-medium text-white">เพิ่มลงทริป</button>}
             {p.google_maps_url && (
               <a href={p.google_maps_url} target="_blank" rel="noreferrer" className="rounded-full px-5 py-2.5 text-sm font-medium text-forest ring-1 ring-forest/25 hover:bg-mist">
                 เปิดใน Google Maps

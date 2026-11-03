@@ -35,8 +35,8 @@ function FooterWave() {
 
 const links = [
   { to: '/recommend', label: 'ค้นหาที่เที่ยว' },
-  { to: '/planner', label: 'วางแผนทริป' },
-  { to: '/trips', label: 'ทริปของฉัน' },
+  { to: '/planner', label: 'วางแผนทริป', auth: true },
+  { to: '/trips', label: 'ทริปของฉัน', auth: true },
 ]
 
 function AccountArea({ mobile = false, onNavigate }) {
@@ -72,6 +72,8 @@ function AccountArea({ mobile = false, onNavigate }) {
 export default function Layout() {
   const [open, setOpen] = useState(false)
   const count = useTrip((s) => s.days.reduce((n, d) => n + d.blocks.length, 0))
+  const loggedIn = useAuth((s) => !!s.token)
+  const visible = links.filter((l) => !l.auth || loggedIn)
   const navCls = ({ isActive }) =>
     `rounded-full px-4 py-2 text-[15px] transition ${isActive ? 'bg-leaf font-medium text-forest' : 'text-forest hover:bg-mist'}`
   return (
@@ -83,7 +85,7 @@ export default function Layout() {
         <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6">
           <Logo />
           <nav className="hidden items-center gap-1 lg:flex" aria-label="เมนูหลัก">
-            {links.map((l) => (
+            {visible.map((l) => (
               <NavLink
                 key={l.to}
                 to={l.to}
@@ -105,7 +107,7 @@ export default function Layout() {
         </div>
         {open && (
           <nav className="flex flex-col gap-1 border-t border-forest/10 px-4 py-3 lg:hidden" aria-label="เมนูหลัก (มือถือ)">
-            {links.map((l) => (
+            {visible.map((l) => (
               <NavLink key={l.to} to={l.to} className={navCls} onClick={() => setOpen(false)}>
                 {l.label}
                 {l.to === '/planner' && count > 0 && <span className="ml-1.5 rounded-full bg-sun px-1.5 text-xs text-ink">{count}</span>}
@@ -132,8 +134,8 @@ export default function Layout() {
             </div>
             <nav className="flex flex-wrap gap-x-6 gap-y-2 text-sm sm:justify-end" aria-label="ลิงก์ท้ายหน้า">
               <Link to="/recommend" className="text-white/90 hover:text-white hover:underline">ค้นหาที่เที่ยว</Link>
-              <Link to="/planner" className="text-white/90 hover:text-white hover:underline">วางแผนทริป</Link>
-              <Link to="/trips" className="text-white/90 hover:text-white hover:underline">ทริปของฉัน</Link>
+              {loggedIn && <Link to="/planner" className="text-white/90 hover:text-white hover:underline">วางแผนทริป</Link>}
+              {loggedIn && <Link to="/trips" className="text-white/90 hover:text-white hover:underline">ทริปของฉัน</Link>}
             </nav>
           </div>
           <div className="border-t border-white/15">

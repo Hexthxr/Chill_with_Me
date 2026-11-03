@@ -91,10 +91,50 @@ export default function Account() {
 
       <PasswordSection hasPassword={!!user?.has_password} onSaved={() => setUser({ ...user, has_password: true })} />
 
+      <HistorySection />
+
       <div className="mt-6 text-center">
         <button onClick={logout} className="rounded-full px-5 py-2 text-sm font-medium text-alert hover:bg-alert-soft">ออกจากระบบ</button>
       </div>
     </div>
+  )
+}
+
+function HistorySection() {
+  const push = useToast((s) => s.push)
+  const [sum, setSum] = useState(null)
+  const [busy, setBusy] = useState(false)
+  const load = () => api.activitySummary().then(setSum).catch(() => setSum(null))
+  useEffect(() => {
+    load()
+  }, [])
+  const clearAll = async () => {
+    setBusy(true)
+    try {
+      await api.clearActivity()
+      push('ล้างประวัติการดูแล้ว คำแนะนำจะเริ่มเรียนรู้ใหม่')
+      await load()
+    } finally {
+      setBusy(false)
+    }
+  }
+  return (
+    <section id="history" className="card-sky mt-6 rounded-3xl p-6 ring-1 ring-forest/5">
+      <h2 className="text-lg text-ink">ประวัติการดูสถานที่</h2>
+      <p className="mt-1 text-sm text-muted">
+        ระบบจำสถานที่ที่คุณเปิดดูและเพิ่มลงทริป เพื่อแนะนำที่คล้ายกันในหน้าแรก (เก็บไว้สูงสุด {sum?.retention_days ?? 180} วัน)
+      </p>
+      <p className="mt-3 text-sm">
+        {sum == null ? 'กำลังโหลด…' : sum.places === 0 ? 'ยังไม่มีประวัติ' : <>เคยดู/เพิ่ม <b className="text-forest">{sum.places}</b> สถานที่ ({sum.events} ครั้ง)</>}
+      </p>
+      <button
+        onClick={clearAll}
+        disabled={busy || !sum?.places}
+        className="mt-4 rounded-full px-5 py-2 text-sm font-medium text-alert ring-1 ring-alert/30 hover:bg-alert-soft disabled:opacity-40"
+      >
+        {busy ? 'กำลังล้าง…' : 'ล้างประวัติการดู'}
+      </button>
+    </section>
   )
 }
 

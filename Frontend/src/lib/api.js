@@ -52,6 +52,8 @@ async function request(path, { method = 'GET', body, params, signal } = {}) {
   return data
 }
 
+const recentSignals = new Map()
+
 export const api = {
   authConfig: () => request('/api/auth/config'),
   registerStart: (body) => request('/api/auth/register/start', { method: 'POST', body }),
@@ -62,6 +64,17 @@ export const api = {
   resendOtp: (request_id) => request('/api/auth/resend', { method: 'POST', body: { request_id } }),
   verifyOtp: (body) => request('/api/auth/verify', { method: 'POST', body }),
   me: () => request('/api/auth/me'),
+  logActivity: (place_id, action = 'view') => {
+    // skip duplicate signals fired back-to-back (React StrictMode double effects, quick re-renders)
+    const k = `${action}:${place_id}`
+    const now = Date.now()
+    if (now - (recentSignals.get(k) || 0) < 5000) return Promise.resolve(null)
+    recentSignals.set(k, now)
+    return request('/api/activity', { method: 'POST', body: { place_id, action } })
+  },
+  activitySummary: () => request('/api/activity/summary'),
+  clearActivity: () => request('/api/activity', { method: 'DELETE' }),
+  personal: (params) => request('/api/recommend/personal', { params }),
   updateMe: (body) => request('/api/auth/me', { method: 'PATCH', body }),
   logout: () => request('/api/auth/logout', { method: 'POST' }),
   health: () => request('/api/health'),

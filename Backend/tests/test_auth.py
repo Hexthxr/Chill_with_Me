@@ -43,6 +43,39 @@ def client():
 PW = "chill2026"
 
 
+@pytest.fixture(autouse=True)
+def _otp_on(monkeypatch):
+    """Most tests here exercise the OTP flows; OTP is off by default (OTP_ENABLED=false)."""
+    _set_otp(monkeypatch, True)
+
+
+def _set_otp(monkeypatch, on: bool):
+    import dataclasses
+
+    from app.routers import auth as auth_router
+
+    monkeypatch.setattr(auth_router, "settings", dataclasses.replace(auth_router.settings, otp_enabled=on))
+
+
+@needs_db
+def test_register_without_otp(client, monkeypatch):
+    _set_otp(monkeypatch, False)
+    assert client.get("/api/auth/config").json()["otp_enabled"] is False
+    phone = rand_phone()
+    r = client.post("/api/auth/register/start", json={"name": "ไม่ใช้ OTP", "phone": phone, "password": PW, "interests": ["sea"]})
+    assert r.status_code == 200
+    d = r.json()
+    assert d["created"] is True and d["token"] and d["user"]["interests"] == ["sea"]
+    assert client.get("/api/auth/me", headers={"Authorization": f"Bearer {d['token']}"}).status_code == 200
+    # duplicate phone, password login works, every OTP endpoint is closed
+    assert client.post("/api/auth/register/start", json={"name": "x", "phone": phone, "password": PW}).status_code == 409
+    assert client.post("/api/auth/login", json={"phone": phone, "password": PW}).status_code == 200
+    for path, body in [("/api/auth/login/start", {"phone": phone}), ("/api/auth/password/reset/start", {"phone": phone}),
+                       ("/api/auth/resend", {"request_id": "x"}), ("/api/auth/verify", {"request_id": "x", "code": "123456"})]:
+        res = client.post(path, json=body)
+        assert res.status_code == 404 and res.json()["error"]["code"] == "otp_disabled", path
+
+
 def rand_phone() -> str:
     return "09" + "".join(random.choice("0123456789") for _ in range(8))
 
@@ -96,11 +129,17 @@ def test_login_and_trip_ownership(client):
     trip = client.post("/api/trips", json=plan, headers=h).json()
     assert trip["user_id"]
     assert any(t["id"] == trip["id"] for t in client.get("/api/trips", headers=h).json()["items"])
-    # anonymous / other user cannot modify
-    assert client.put(f"/api/trips/{trip['id']}", json=plan).status_code == 403
-    assert client.delete(f"/api/trips/{trip['id']}").status_code == 403
-    # anonymous list without owner_key is empty (no leaking everyone's trips)
-    assert client.get("/api/trips").json()["items"] == []
+    # guests: every trip endpoint needs login
+    assert client.get(f"/api/trips/{trip['id']}").status_code == 401
+    assert client.put(f"/api/trips/{trip['id']}", json=plan).status_code == 401
+    assert client.delete(f"/api/trips/{trip['id']}").status_code == 401
+    assert client.get("/api/trips").status_code == 401
+    # another account cannot see / change it (404, so ids can't be probed)
+    other = _register(client, rand_phone())
+    h2 = {"Authorization": f"Bearer {other['token']}"}
+    assert client.get(f"/api/trips/{trip['id']}", headers=h2).status_code == 404
+    assert client.put(f"/api/trips/{trip['id']}", json=plan, headers=h2).status_code == 404
+    assert all(t["id"] != trip["id"] for t in client.get("/api/trips", headers=h2).json()["items"])
     assert client.delete(f"/api/trips/{trip['id']}", headers=h).status_code == 204
 
 
@@ -118,16 +157,13 @@ def test_validation_and_rate_limit(client):
 
 
 @needs_db
-def test_anonymous_trips_attach_on_login(client):
-    key = f"pytest-{random.randint(0, 10**9)}"
-    plan = {"name": "ร่าง", "start_date": "2026-11-01", "days": [{"blocks": []}], "owner_key": key}
-    t = client.post("/api/trips", json=plan).json()
-    assert t["user_id"] is None
-    s = client.post("/api/auth/register/start", json={"name": "B", "phone": rand_phone(), "password": PW}).json()
-    v = client.post("/api/auth/verify", json={"request_id": s["request_id"], "code": s["dev_code"], "owner_key": key}).json()
-    assert v["attached_trips"] == 1
-    h = {"Authorization": f"Bearer {v['token']}"}
-    assert any(x["id"] == t["id"] for x in client.get("/api/trips", headers=h).json()["items"])
+def test_guests_cannot_plan_or_save_trips(client):
+    plan = {"name": "ร่าง", "start_date": "2026-11-01", "days": [{"blocks": []}]}
+    assert client.post("/api/trips", json=plan).status_code == 401
+    assert client.post("/api/planner/compute", json=plan).status_code == 401
+    assert client.post("/api/planner/optimize", json={"plan": plan, "day_index": 0}).status_code == 401
+    assert client.post("/api/routing/legs", json={"points": [[13.7, 100.5], [13.8, 100.6]]}).status_code == 401
+    assert client.post("/api/trips", json=plan, headers={"Authorization": "Bearer not-a-real-token"}).status_code == 401
 
 
 def _register(client, phone, pw=PW):

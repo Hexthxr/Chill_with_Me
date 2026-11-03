@@ -138,9 +138,18 @@ class Recommender:
         only_accommodation: bool = False,
         limit: int = 20,
         offset: int = 0,
+        query_vector=None,
+        exclude_ids: set[str] | None = None,
     ) -> tuple[list[Scored], int]:
+        """query_vector: a ready user-profile vector (personal recommendations) instead of interests/q.
+        exclude_ids: places never to return (e.g. ones the user has already seen)."""
         s = self.sig
         mask = s["present"].values.copy()
+        if exclude_ids:
+            for pid in exclude_ids:
+                i = self.index.get(pid)
+                if i is not None:
+                    mask[i] = False
         if candidate_ids is not None:
             cand = np.zeros(len(s), dtype=bool)
             for pid in candidate_ids:
@@ -162,7 +171,7 @@ class Recommender:
         if total == 0:
             return [], 0
 
-        qv = self.query_vector(interests, q)
+        qv = query_vector if query_vector is not None else self.query_vector(interests, q)
         comp: dict[str, np.ndarray] = {
             "quality": s["quality_score"].values[idx].astype(float),
             "sentiment": s["sentiment_score"].values[idx].astype(float),
@@ -237,12 +246,48 @@ class Recommender:
         rest = [j for j in np.argsort(-final, kind="stable") if j not in set(chosen)] if len(chosen) < n else []
         return np.array(chosen + rest[: n - len(chosen)], dtype=int)
 
-    def similar(self, place_id: str, limit: int = 8, include_accommodation: bool = False) -> list[tuple[str, float]]:
+    # ---- personalisation (behaviour-based, still content-based filtering)
+    def profile_vector(self, weights: dict[str, float], interests: list[str] | None = None, interest_share: float = 0.3):
+        """User profile = weighted average of the TF-IDF vectors of places the user interacted with,
+        blended with their declared interests. Returns an L2-normalised row vector or None."""
+        rows, w = [], []
+        for pid, wt in weights.items():
+            i = self.index.get(pid)
+            if i is not None and wt > 0:
+                rows.append(i)
+                w.append(wt)
+        hist = None
+        if rows:
+            hist = sp.csr_matrix(np.asarray(w, dtype=np.float32)) @ self.X[rows]
+            hist = normalize(hist)
+        inter = self.query_vector(interests or [], None)
+        if hist is None:
+            return inter
+        if inter is None:
+            return hist.tocsr()
+        return normalize((1 - interest_share) * hist + interest_share * inter).tocsr()
+
+    def nearest_seed(self, place_id: str, seed_ids: list[str]) -> tuple[str | None, float]:
+        """Which seen place is most similar to place_id (to explain 'because you viewed X')."""
+        i = self.index.get(place_id)
+        idx = [self.index[s] for s in seed_ids if s in self.index]
+        if i is None or not idx:
+            return None, 0.0
+        sims = np.asarray((self.X[idx] @ self.X.getrow(i).T).todense()).ravel()
+        j = int(np.argmax(sims))
+        return self.place_ids[idx[j]], float(sims[j])
+
+    def similar(self, place_id: str, limit: int = 8, include_accommodation: bool = False,
+                exclude_ids: set[str] | None = None) -> list[tuple[str, float]]:
         i = self.index.get(place_id)
         if i is None:
             return []
         sims = np.asarray((self.X @ self.X.getrow(i).T).todense()).ravel()
         sims[i] = -1
+        for pid in exclude_ids or ():
+            j = self.index.get(pid)
+            if j is not None:
+                sims[j] = -1
         if not include_accommodation:
             sims[self.sig["is_accommodation"].values] = -1
         order = np.argsort(-sims)[:limit]
@@ -258,7 +303,7 @@ class Recommender:
             target = ", ".join(labels) if labels else f"“{q}”"
             if q and labels:
                 target += f" และ “{q}”"
-            msg = f"เนื้อหาตรงกับ {target}"
+            msg = f"เนื้อหาตรงกับ {target}" if (labels or q) else "เนื้อหาตรงกับสิ่งที่คุณสนใจและเคยดู"
             if terms:
                 msg += f" (คำเด่น: {', '.join(terms)})"
             reasons.append(msg)

@@ -1,4 +1,8 @@
-"""Accounts with Thai mobile number, password and OTP.
+"""Accounts with Thai mobile number, password and (optional) OTP.
+
+OTP_ENABLED=false (default): POST /api/auth/register/start creates the account immediately and returns a token,
+login is phone + password only, and every OTP endpoint answers 404 otp_disabled.
+OTP_ENABLED=true: the flows below.
 
 Register:        POST /api/auth/register/start {name, phone, password, interests} -> OTP sent
                  POST /api/auth/verify {request_id, code}       -> account created + token
@@ -62,6 +66,7 @@ class RegisterStart(BaseModel):
     phone: str = Field(min_length=9, max_length=20)
     password: str = Field(min_length=1, max_length=128)
     interests: list[str] = Field(default_factory=list, max_length=len(INTERESTS))
+    owner_key: str | None = Field(default=None, max_length=64)
 
     @field_validator("name")
     @classmethod
@@ -130,7 +135,13 @@ def _phone_or_422(raw: str) -> str:
     return p
 
 
+def _require_otp() -> None:
+    if not settings.otp_enabled:
+        raise APIError(404, "otp_disabled", "ระบบนี้ไม่ได้ใช้รหัส OTP กรุณาเข้าสู่ระบบด้วยเบอร์โทรและรหัสผ่าน")
+
+
 async def _issue_otp(phone: str, purpose: str, payload: dict | None = None) -> dict:
+    _require_otp()
     db = get_db()
     now = datetime.now(timezone.utc)
     last = await db.otp_requests.find_one({"phone": phone}, sort=[("created_at", -1)])
@@ -182,8 +193,12 @@ async def _issue_otp(phone: str, purpose: str, payload: dict | None = None) -> d
 
 @router.get("/config")
 async def auth_config():
+    if not settings.otp_enabled:
+        return {"otp_enabled": False, "sms_provider": None, "test_mode": False, "otp_length": 6,
+                "message": "สมัครและเข้าสู่ระบบด้วยเบอร์โทรและรหัสผ่าน (ไม่ใช้ OTP)"}
     p = sms.provider()
     return {
+        "otp_enabled": True,
         "sms_provider": p,
         "test_mode": p == "console",
         "otp_length": settings.thaibulksms_otp_length if p == "thaibulksms" else 6,
@@ -197,6 +212,17 @@ async def register_start(body: RegisterStart):
     phone = _phone_or_422(body.phone)
     if await get_db().users.find_one({"phone": phone}, {"_id": 1}):
         raise APIError(409, "phone_exists", "เบอร์นี้มีบัญชีอยู่แล้ว กรุณาเข้าสู่ระบบ")
+    if not settings.otp_enabled:
+        # no OTP: create the account right away (phone is not verified)
+        now = datetime.now(timezone.utc)
+        doc = {"name": body.name, "phone": phone, "interests": body.interests,
+               "password_hash": hash_password(body.password), "phone_verified_at": None,
+               "created_at": now, "updated_at": now, "last_login_at": now}
+        try:
+            doc["_id"] = (await get_db().users.insert_one(doc)).inserted_id
+        except DuplicateKeyError:
+            raise APIError(409, "phone_exists", "เบอร์นี้มีบัญชีอยู่แล้ว กรุณาเข้าสู่ระบบ")
+        return await _attach_and_login(doc, body.owner_key, created=True)
     # only the hash is kept in the pending OTP record – never the plain password
     return await _issue_otp(phone, "register", {"name": body.name, "interests": body.interests,
                                                  "password_hash": hash_password(body.password)})
@@ -204,6 +230,7 @@ async def register_start(body: RegisterStart):
 
 @router.post("/login/start")
 async def login_start(body: LoginStart):
+    _require_otp()
     phone = _phone_or_422(body.phone)
     if not await get_db().users.find_one({"phone": phone}, {"_id": 1}):
         raise APIError(404, "no_account", "ยังไม่มีบัญชีสำหรับเบอร์นี้ กรุณาสมัครสมาชิก")
@@ -236,7 +263,8 @@ async def login_password(body: PasswordLogin):
     lock = user.get("lock_until")
     if lock and (lock if lock.tzinfo else lock.replace(tzinfo=timezone.utc)) > now:
         mins = int(((lock if lock.tzinfo else lock.replace(tzinfo=timezone.utc)) - now).total_seconds() // 60) + 1
-        raise APIError(429, "account_locked", f"กรอกรหัสผ่านผิดหลายครั้ง กรุณารอ {mins} นาที หรือเข้าสู่ระบบด้วย OTP")
+        raise APIError(429, "account_locked", f"กรอกรหัสผ่านผิดหลายครั้ง กรุณารอ {mins} นาที"
+                       + (" หรือเข้าสู่ระบบด้วย OTP" if settings.otp_enabled else " แล้วลองใหม่"))
     if not user.get("password_hash"):
         raise APIError(400, "no_password", "บัญชีนี้ยังไม่ได้ตั้งรหัสผ่าน กรุณาเข้าสู่ระบบด้วย OTP แล้วตั้งรหัสผ่านในหน้าบัญชี")
     if not verify_password(body.password, user["password_hash"]):
@@ -252,6 +280,7 @@ async def login_password(body: PasswordLogin):
 
 @router.post("/password/reset/start")
 async def reset_start(body: LoginStart):
+    _require_otp()
     phone = _phone_or_422(body.phone)
     if not await get_db().users.find_one({"phone": phone}, {"_id": 1}):
         raise APIError(404, "no_account", "ยังไม่มีบัญชีสำหรับเบอร์นี้ กรุณาสมัครสมาชิก")
@@ -272,6 +301,7 @@ async def change_password(body: PasswordChange, user: dict = Depends(require_use
 
 @router.post("/resend")
 async def resend(body: Resend):
+    _require_otp()
     try:
         old = await get_db().otp_requests.find_one({"_id": ObjectId(body.request_id)})
     except (InvalidId, TypeError):
@@ -283,6 +313,7 @@ async def resend(body: Resend):
 
 @router.post("/verify")
 async def verify(body: Verify):
+    _require_otp()
     db = get_db()
     try:
         rid = ObjectId(body.request_id)

@@ -4,6 +4,8 @@ import { AuthShell, Field, inputCls, PasswordInput, passwordProblem, PasswordRul
 import { InterestChips, useInterests } from '../components/Bits'
 import OtpStep from '../components/OtpStep'
 import { api } from '../lib/api'
+import { getOwnerKey } from '../lib/ownerKey'
+import { useAuthConfig } from '../lib/useAuthConfig'
 import { useAuth } from '../store/authStore'
 import { useToast } from '../store/tripStore'
 
@@ -25,6 +27,7 @@ export default function Register() {
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState(null)
   const [otp, setOtp] = useState(null)
+  const otpOn = !!useAuthConfig()?.otp_enabled
 
   const nameErr = touched && !name.trim() ? 'กรุณากรอกชื่อ' : null
   const phoneErr = touched && !isThaiMobile(phone) ? 'กรอกเบอร์มือถือ 10 หลัก เช่น 0812345678' : null
@@ -39,7 +42,9 @@ export default function Register() {
     setBusy(true)
     setErr(null)
     try {
-      setOtp(await api.registerStart({ name: name.trim(), phone, password, interests: picked }))
+      const r = await api.registerStart({ name: name.trim(), phone, password, interests: picked, owner_key: getOwnerKey() })
+      if (r.token) done(r) // OTP off: account is created right away
+      else setOtp(r)
     } catch (e2) {
       setErr(e2)
     } finally {
@@ -56,9 +61,15 @@ export default function Register() {
   return (
     <AuthShell
       title={otp ? 'ยืนยันเบอร์มือถือ' : 'สมัครสมาชิก'}
-      subtitle={otp ? 'ขั้นตอนที่ 2 จาก 2 — บัญชีจะถูกสร้างหลังยืนยันรหัส OTP' : 'ขั้นตอนที่ 1 จาก 2 — บอกเราหน่อยว่าคุณเป็นใครและชอบเที่ยวแบบไหน'}
+      subtitle={
+        !otpOn
+          ? 'บอกเราหน่อยว่าคุณเป็นใครและชอบเที่ยวแบบไหน'
+          : otp
+            ? 'ขั้นตอนที่ 2 จาก 2 — บัญชีจะถูกสร้างหลังยืนยันรหัส OTP'
+            : 'ขั้นตอนที่ 1 จาก 2 — บอกเราหน่อยว่าคุณเป็นใครและชอบเที่ยวแบบไหน'
+      }
     >
-      <ol className="mb-8 flex items-center gap-3 text-sm" aria-label="ขั้นตอน">
+      {otpOn && <ol className="mb-8 flex items-center gap-3 text-sm" aria-label="ขั้นตอน">
         {['ข้อมูลของคุณ', 'ยืนยัน OTP'].map((l, i) => {
           const active = (otp ? 1 : 0) === i
           const doneStep = otp && i === 0
@@ -72,7 +83,7 @@ export default function Register() {
             </li>
           )
         })}
-      </ol>
+      </ol>}
 
       {otp ? (
         <OtpStep key={otp.request_id} otp={otp} onOtpChange={setOtp} onVerified={done} onBack={() => setOtp(null)} />
@@ -81,7 +92,7 @@ export default function Register() {
           <Field label="ชื่อ" htmlFor="name" error={nameErr}>
             <input id="name" value={name} onChange={(e) => setName(e.target.value)} maxLength={80} autoComplete="name" placeholder="ชื่อที่ให้เราเรียก" className={inputCls} />
           </Field>
-          <Field label="เบอร์โทรศัพท์มือถือ" htmlFor="phone" error={phoneErr} hint="เราจะส่งรหัส OTP ไปยังเบอร์นี้เพื่อยืนยันตัวตน">
+          <Field label="เบอร์โทรศัพท์มือถือ" htmlFor="phone" error={phoneErr} hint={otpOn ? 'เราจะส่งรหัส OTP ไปยังเบอร์นี้เพื่อยืนยันตัวตน' : 'ใช้เบอร์นี้คู่กับรหัสผ่านเพื่อเข้าสู่ระบบ'}>
             <input id="phone" type="tel" inputMode="tel" value={phone} onChange={(e) => setPhone(e.target.value)} maxLength={15} autoComplete="tel" placeholder="08x-xxx-xxxx" className={inputCls} />
           </Field>
           <Field label="รหัสผ่าน" htmlFor="password" error={pwErr}>
@@ -105,7 +116,7 @@ export default function Register() {
           )}
 
           <button disabled={busy} className="btn-primary w-full rounded-full py-3 text-[15px] font-medium disabled:opacity-50">
-            {busy ? 'กำลังส่งรหัส…' : 'รับรหัส OTP'}
+            {otpOn ? (busy ? 'กำลังส่งรหัส…' : 'รับรหัส OTP') : busy ? 'กำลังสร้างบัญชี…' : 'สมัครสมาชิก'}
           </button>
           <p className="text-center text-sm text-muted">
             มีบัญชีอยู่แล้ว? <Link to={`/login${sp.get('redirect') ? `?redirect=${encodeURIComponent(redirect)}` : ''}`} className="font-medium text-forest hover:underline">เข้าสู่ระบบ</Link>

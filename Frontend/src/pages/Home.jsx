@@ -43,6 +43,7 @@ function SearchCard() {
   const setMeta = useTrip((s) => s.setMeta)
   const setDayCount = useTrip((s) => s.setDayCount)
   const push = useToast((s) => s.push)
+  const loggedIn = useAuth((s) => !!s.token)
 
   const [tab, setTab] = useState('stay')
   const [provinces, setProvinces] = useState([])
@@ -76,7 +77,7 @@ function SearchCard() {
     const prov = findProvince(dest)
     if (prov) p.set('province', prov.province)
     else if (dest.trim()) p.set('q', dest.trim())
-    if (useInTrip) {
+    if (loggedIn && useInTrip) {
       setMeta({ start_date: checkIn })
       setDayCount(Math.min(14, nights + 1))
       push(`ตั้งแผนทริปเป็น ${fmtThaiDate(checkIn, false)}, ${Math.min(14, nights + 1)} วัน`)
@@ -145,10 +146,12 @@ function SearchCard() {
                 <span className="block text-xs text-muted">ทริป {Math.min(14, nights + 1)} วัน</span>
               </div>
             </div>
-            <label className="flex items-center gap-2 pt-1 text-sm">
-              <input type="checkbox" checked={useInTrip} onChange={(e) => setUseInTrip(e.target.checked)} className="h-4 w-4 accent-[#2067da]" />
-              ใช้วันที่นี้เป็นวันเดินทางในแผนทริป
-            </label>
+            {loggedIn && (
+              <label className="flex items-center gap-2 pt-1 text-sm">
+                <input type="checkbox" checked={useInTrip} onChange={(e) => setUseInTrip(e.target.checked)} className="h-4 w-4 accent-[#2067da]" />
+                ใช้วันที่นี้เป็นวันเดินทางในแผนทริป
+              </label>
+            )}
             <p className="text-xs text-muted">ข้อมูลที่พักมาจากชุดข้อมูลของระบบ (ส่วนใหญ่อยู่ภาคเหนือและอีสาน) และยังไม่มีระบบจองหรือเช็กห้องว่าง</p>
             <div className="pt-2 text-center">
               <button className="w-full max-w-sm rounded-full btn-primary py-3 text-[15px] font-medium text-white">ค้นหาที่พัก</button>
@@ -243,14 +246,11 @@ function UnderlineTabs({ items, value, onChange, label }) {
 
 function ForYou() {
   const interests = useInterests()
-  const user = useAuth((s) => s.user)
-  const mine = user?.interests?.length ? user.interests : null
-  const [tab, setTab] = useState(mine ? 'mine' : 'nature')
+  const user = null // members see <PersonalFeed/> instead
+  const mine = null
+  const [tab, setTab] = useState('nature')
   const [state, setState] = useState({ loading: true })
-  useEffect(() => {
-    setTab(mine ? 'mine' : 'nature')
-  }, [mine?.join(',')]) // eslint-disable-line react-hooks/exhaustive-deps
-  const query = tab === 'mine' && mine ? mine.join(',') : tab
+  const query = tab
   const load = () => {
     setState({ loading: true })
     api.recommend({ interests: query, limit: 6 }).then((d) => setState({ items: d.items })).catch((error) => setState({ error }))
@@ -285,6 +285,76 @@ function ForYou() {
           </div>
         )}
       </div>
+    </section>
+  )
+}
+
+function Row({ title, sub, items, extra }) {
+  return (
+    <div className="mt-8 first:mt-0">
+      <h3 className="text-lg text-ink">{title}</h3>
+      {sub && <p className="text-sm text-muted">{sub}</p>}
+      <div className="no-scrollbar -mx-4 mt-3 flex gap-4 overflow-x-auto px-4 pb-2 sm:mx-0 sm:px-0">
+        {items.map((p) => (
+          <div key={p.place_id} className="w-56 shrink-0">
+            <CompactCard place={p} extra={extra?.(p)} />
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+/** Netflix-style feed built from the member's viewing / trip history (+ interests). */
+function PersonalFeed() {
+  const user = useAuth((s) => s.user)
+  const [state, setState] = useState({ loading: true })
+  const load = () => {
+    setState({ loading: true })
+    api.personal({ limit: 9, because_rows: 2 }).then((data) => setState({ data })).catch((error) => setState({ error }))
+  }
+  useEffect(load, [user?.id]) // eslint-disable-line react-hooks/exhaustive-deps
+  const d = state.data
+  const sub = !d
+    ? ''
+    : d.basis === 'popular'
+      ? 'ยังไม่มีประวัติการดู ระบบจึงแสดงสถานที่ยอดนิยมก่อน ลองเปิดดูสถานที่ที่ชอบแล้วคำแนะนำจะเปลี่ยนตามคุณ'
+      : d.basis === 'interests'
+        ? 'จากความสนใจในบัญชีของคุณ เมื่อคุณเปิดดูสถานที่มากขึ้น คำแนะนำจะเรียนรู้จากสิ่งที่คุณดูด้วย'
+        : `เรียนรู้จากสถานที่ ${fmtInt(d.history_places)} แห่งที่คุณเคยดูหรือเพิ่มลงทริป${d.basis === 'history+interests' ? ' ร่วมกับความสนใจของคุณ' : ''}`
+  return (
+    <section className="mx-auto mt-14 max-w-6xl rounded-[32px] px-4 py-10 sm:px-8 band-sky">
+      <SectionTitle
+        title={`แนะนำสำหรับคุณ${user?.name || ''}`}
+        sub={sub}
+        right={<Link to="/account#history" className="text-sm text-forest hover:underline">จัดการประวัติการดู</Link>}
+      />
+      {state.loading && <CardSkeletons n={3} />}
+      {state.error && <ErrorState error={state.error} onRetry={load} />}
+      {d && (
+        <>
+          {d.recent.length > 0 && <Row title="ดูล่าสุด" items={d.recent} />}
+          {d.because.map((b) => (
+            <Row
+              key={b.seed.place_id}
+              title={`เพราะคุณดู “${b.seed.name}”`}
+              sub="สถานที่ที่เนื้อหารีวิวและประเภทใกล้เคียงกัน"
+              items={b.items}
+            />
+          ))}
+          <div className="mt-8">
+            <h3 className="text-lg text-ink">{d.basis === 'popular' ? 'ยอดนิยมตอนนี้' : 'คัดมาให้คุณ'}</h3>
+            {d.for_you.length === 0 ? (
+              <EmptyState title="ยังไม่มีคำแนะนำ" />
+            ) : (
+              <div className="mt-3 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                {d.for_you.map((p) => <PlaceCard key={p.place_id} place={p} />)}
+              </div>
+            )}
+            <p className="mt-4 text-xs text-muted">{d.explain}</p>
+          </div>
+        </>
+      )}
     </section>
   )
 }
@@ -443,6 +513,7 @@ function PlannerPromo() {
 /* ------------------------------------------------------------------ page */
 
 export default function Home() {
+  const loggedIn = useAuth((s) => !!s.token)
   const [stats, setStats] = useState(null)
   useEffect(() => {
     api.stats().then(setStats).catch(() => {})
@@ -474,10 +545,10 @@ export default function Home() {
         </ul>
       )}
 
-      <ForYou />
+      {loggedIn ? <PersonalFeed /> : <ForYou />}
       <Popular />
       <Stays />
-      <PlannerPromo />
+      {loggedIn && <PlannerPromo />}
     </div>
   )
 }

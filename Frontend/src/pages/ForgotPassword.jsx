@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { AuthShell, Field, inputCls, PasswordInput, passwordProblem, PasswordRules } from '../components/AuthShell'
 import OtpStep from '../components/OtpStep'
 import { api } from '../lib/api'
+import { useAuthConfig } from '../lib/useAuthConfig'
 import { useAuth } from '../store/authStore'
 import { useToast } from '../store/tripStore'
 import { isThaiMobile } from './Register'
@@ -19,6 +20,7 @@ export default function ForgotPassword() {
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState(null)
   const [otp, setOtp] = useState(null)
+  const cfg = useAuthConfig()
 
   const phoneErr = touched && !isThaiMobile(phone) ? 'กรอกเบอร์มือถือ 10 หลัก เช่น 0812345678' : null
   const pwErr = touched && passwordProblem(password) ? `รหัสผ่าน${passwordProblem(password)}` : null
@@ -43,6 +45,17 @@ export default function ForgotPassword() {
     setSession(r.token, r.user)
     push('ตั้งรหัสผ่านใหม่แล้ว อุปกรณ์อื่นที่เคยเข้าสู่ระบบจะถูกออกจากระบบ')
     navigate('/', { replace: true })
+  }
+
+  if (cfg && !cfg.otp_enabled) {
+    return (
+      <AuthShell title="ลืมรหัสผ่าน" subtitle="ตอนนี้ระบบไม่ได้ใช้รหัส OTP จึงยังรีเซ็ตรหัสผ่านเองไม่ได้">
+        <p className="rounded-xl bg-mist px-4 py-3 text-sm text-ink">
+          ลองนึกรหัสผ่านแล้วเข้าสู่ระบบอีกครั้ง หรือติดต่อผู้ดูแลระบบเพื่อขอตั้งรหัสใหม่
+        </p>
+        <Link to="/login" className="btn-primary mt-6 block w-full rounded-full py-3 text-center text-[15px] font-medium">กลับไปหน้าเข้าสู่ระบบ</Link>
+      </AuthShell>
+    )
   }
 
   return (

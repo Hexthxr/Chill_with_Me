@@ -14,7 +14,7 @@ export function AuthShell({ title, subtitle, children }) {
           <p className="text-lg font-semibold tracking-wide">CHILL WITH ME</p>
           <h2 className="mt-8 text-3xl leading-snug text-white">เที่ยวไทยแบบไม่ต้องเดา</h2>
           <ul className="mt-6 space-y-3 text-white/90">
-            {['เก็บแผนทริปไว้ในบัญชี เปิดได้ทุกเครื่อง', 'แนะนำที่เที่ยวตามความสนใจของคุณ', 'ยืนยันเบอร์มือถือด้วย OTP เพื่อความปลอดภัย'].map((t) => (
+            {['เก็บแผนทริปไว้ในบัญชี เปิดได้ทุกเครื่อง', 'แนะนำที่เที่ยวตามความสนใจของคุณ', 'รหัสผ่านถูกเข้ารหัส ไม่มีใครเห็นได้'].map((t) => (
               <li key={t} className="flex gap-3">
                 <span className="mt-1.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-white/20" aria-hidden="true">
                   <svg viewBox="0 0 20 20" className="h-3 w-3 fill-white"><path d="M7.6 13.4L4.2 10l-1.4 1.4 4.8 4.8 10-10-1.4-1.4z" /></svg>

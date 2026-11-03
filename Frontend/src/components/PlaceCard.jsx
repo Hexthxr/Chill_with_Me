@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { api } from '../lib/api'
+import { useAuth } from '../store/authStore'
 import { useToast, useTrip } from '../store/tripStore'
 import { Rating, SentimentPill } from './Bits'
 import PlaceArt from './PlaceArt'
@@ -11,12 +13,14 @@ export function useAddToTrip() {
   return (place) => {
     addPlace(place)
     push(`เพิ่ม “${place.name}” ลงวันที่ ${activeDay + 1} แล้ว`)
+    api.logActivity(place.place_id, 'trip_add').catch(() => {}) // behaviour signal for personal recommendations
   }
 }
 
 export default function PlaceCard({ place, rank }) {
   const [open, setOpen] = useState(false)
   const add = useAddToTrip()
+  const loggedIn = useAuth((s) => !!s.token)
   const inTrip = useTrip((s) => s.days.some((d) => d.blocks.some((b) => b.place_id === place.place_id)))
   const reasons = place.reasons || []
   const shown = open ? reasons : reasons.slice(0, 2)
@@ -65,6 +69,7 @@ export default function PlaceCard({ place, rank }) {
         )}
 
         <div className="mt-auto flex items-center gap-2 pt-4">
+          {loggedIn && (
           <button
             onClick={() => add(place)}
             className={`rounded-full px-4 py-2 text-sm font-medium transition ${
@@ -73,6 +78,7 @@ export default function PlaceCard({ place, rank }) {
           >
             {inTrip ? 'อยู่ในทริปแล้ว (เพิ่มซ้ำ)' : 'เพิ่มลงทริป'}
           </button>
+          )}
           <Link to={`/place/${encodeURIComponent(place.place_id)}`} className="rounded-full px-3 py-2 text-sm font-medium text-forest hover:bg-mist">
             รายละเอียด
           </Link>
