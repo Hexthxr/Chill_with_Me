@@ -27,7 +27,7 @@ async def search_places(
 ):
     """Name search / browse (used by the planner's place picker and start-point search)."""
     db = get_db()
-    f: dict = {}
+    f: dict = {"hidden": {"$ne": True}}  # admins can hide places
     if q:
         f["name"] = {"$regex": re.escape(q.strip()), "$options": "i"}
     if province:
@@ -55,7 +55,7 @@ async def search_places(
 async def place_detail(place_id: str):
     db = get_db()
     d = await db.places.find_one({"_id": place_id})
-    if not d:
+    if not d or d.get("hidden"):
         raise APIError(404, "not_found", "ไม่พบสถานที่นี้")
     card = place_card(d)
     ml = d.get("ml") or {}
@@ -117,5 +117,5 @@ async def similar_places(place_id: str, limit: int = Query(8, ge=1, le=24)):
     if not sims:
         return {"items": []}
     db = get_db()
-    docs = {d["_id"]: d async for d in db.places.find({"_id": {"$in": [s[0] for s in sims]}}, CARD_PROJECTION)}
+    docs = {d["_id"]: d async for d in db.places.find({"_id": {"$in": [s[0] for s in sims]}, "hidden": {"$ne": True}}, CARD_PROJECTION)}
     return {"items": [{**place_card(docs[pid]), "similarity": s} for pid, s in sims if pid in docs]}

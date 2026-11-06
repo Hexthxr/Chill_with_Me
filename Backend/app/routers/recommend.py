@@ -59,7 +59,7 @@ async def recommend(
         include_accommodation=include_accommodation, only_accommodation=only_accommodation,
         limit=limit, offset=offset,
     )
-    docs = {d["_id"]: d async for d in db.places.find({"_id": {"$in": [r.place_id for r in results]}}, CARD_PROJECTION)}
+    docs = {d["_id"]: d async for d in db.places.find({"_id": {"$in": [r.place_id for r in results]}, "hidden": {"$ne": True}}, CARD_PROJECTION)}
     items = [
         {**place_card(docs[r.place_id]), "score": r.score, "components": r.components, "reasons": r.reasons,
          "distance_km": r.distance_km}

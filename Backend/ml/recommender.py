@@ -95,7 +95,26 @@ class Recommender:
         # align signals to matrix row order
         self.sig = signals.set_index("place_id").reindex(self.place_ids)
         self.sig["is_accommodation"] = self.sig["is_accommodation"].fillna(False).astype(bool)
-        self.sig["present"] = self.sig["name"].notna()
+        hidden = self.sig["hidden"].fillna(False).astype(bool) if "hidden" in self.sig else False
+        # present = has data in MongoDB and not hidden by an admin -> the only places rank()/similar() return
+        self.sig["present"] = self.sig["name"].notna() & ~hidden
+
+    # ---- live updates from the admin panel (no retraining needed)
+    def set_hidden(self, place_id: str, hidden: bool) -> None:
+        i = self.index.get(place_id)
+        if i is None:
+            return
+        col = self.sig.columns.get_loc("present")
+        self.sig.iat[i, col] = bool(not hidden and pd.notna(self.sig.iat[i, self.sig.columns.get_loc("name")]))
+
+    def update_signals(self, place_id: str, fields: dict) -> None:
+        """Copy edited plain fields (name, province, primary_type, ...) into the in-memory signals."""
+        i = self.index.get(place_id)
+        if i is None:
+            return
+        for k, v in fields.items():
+            if k in self.sig.columns:
+                self.sig.iat[i, self.sig.columns.get_loc(k)] = v
 
     @classmethod
     def load(cls, artifact_path, signals: pd.DataFrame) -> "Recommender":
@@ -284,6 +303,7 @@ class Recommender:
             return []
         sims = np.asarray((self.X @ self.X.getrow(i).T).todense()).ravel()
         sims[i] = -1
+        sims[~self.sig["present"].values] = -1  # hidden / missing places
         for pid in exclude_ids or ():
             j = self.index.get(pid)
             if j is not None:

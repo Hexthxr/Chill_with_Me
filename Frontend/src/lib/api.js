@@ -99,4 +99,12 @@ export const api = {
   createTrip: (body) => request('/api/trips', { method: 'POST', body }),
   updateTrip: (id, body) => request(`/api/trips/${id}`, { method: 'PUT', body }),
   deleteTrip: (id) => request(`/api/trips/${id}`, { method: 'DELETE' }),
+  admin: {
+    stats: () => request('/api/admin/stats'),
+    options: () => request('/api/admin/options'),
+    places: (params, signal) => request('/api/admin/places', { params, signal }),
+    place: (id) => request(`/api/admin/places/${encodeURIComponent(id)}`),
+    updatePlace: (id, body) => request(`/api/admin/places/${encodeURIComponent(id)}`, { method: 'PATCH', body }),
+    audit: (params) => request('/api/admin/audit', { params }),
+  },
 }

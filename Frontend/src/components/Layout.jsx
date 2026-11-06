@@ -37,6 +37,7 @@ const links = [
   { to: '/recommend', label: 'ค้นหาที่เที่ยว' },
   { to: '/planner', label: 'วางแผนทริป', auth: true },
   { to: '/trips', label: 'ทริปของฉัน', auth: true },
+  { to: '/admin', label: 'ผู้ดูแลระบบ', admin: true },
 ]
 
 function AccountArea({ mobile = false, onNavigate }) {
@@ -73,7 +74,8 @@ export default function Layout() {
   const [open, setOpen] = useState(false)
   const count = useTrip((s) => s.days.reduce((n, d) => n + d.blocks.length, 0))
   const loggedIn = useAuth((s) => !!s.token)
-  const visible = links.filter((l) => !l.auth || loggedIn)
+  const isAdmin = useAuth((s) => !!s.token && s.user?.role === 'admin')
+  const visible = links.filter((l) => (l.admin ? isAdmin : !l.auth || loggedIn))
   const navCls = ({ isActive }) =>
     `rounded-full px-4 py-2 text-[15px] transition ${isActive ? 'bg-leaf font-medium text-forest' : 'text-forest hover:bg-mist'}`
   return (

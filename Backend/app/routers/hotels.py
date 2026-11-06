@@ -64,6 +64,7 @@ async def hotel_provinces(limit: int = Query(6, ge=1, le=77)):
     """Provinces with the most lodging rows in the dataset (used for the home page tabs)."""
     db = get_db()
     rows = await (await db.hotels.aggregate([
+        {"$match": {"hidden": {"$ne": True}}},
         {"$group": {"_id": "$province", "count": {"$sum": 1}}},
         {"$sort": {"count": -1}},
         {"$limit": limit},
@@ -82,7 +83,7 @@ async def hotels_near(
     docs = await (await db.hotels.aggregate([
         {"$geoNear": {"near": {"type": "Point", "coordinates": [lng, lat]}, "distanceField": "d",
                       "maxDistance": radius_km * 1000, "spherical": True,
-                      "query": _price_filter(max_price_usd, include_unpriced)}},
+                      "query": {**_price_filter(max_price_usd, include_unpriced), "hidden": {"$ne": True}}}},
         {"$limit": 300},
         {"$project": {**HOTEL_PROJECTION, "d": 1}},
     ])).to_list(None)
@@ -122,7 +123,7 @@ async def hotels_along_route(req: AlongRouteRequest):
     box = [[min(p[1] for p in pts) - pad_lng, min(p[0] for p in pts) - pad_lat],
            [max(p[1] for p in pts) + pad_lng, max(p[0] for p in pts) + pad_lat]]
     db = get_db()
-    q = {"location": {"$geoWithin": {"$box": box}}, **_price_filter(req.max_price_usd, req.include_unpriced)}
+    q = {"location": {"$geoWithin": {"$box": box}}, "hidden": {"$ne": True}, **_price_filter(req.max_price_usd, req.include_unpriced)}
     cands = await db.hotels.find(q, HOTEL_PROJECTION).limit(5000).to_list(None)
     segs = [(pts[i], pts[i + 1]) for i in range(len(pts) - 1)] or [(pts[0], pts[0])]
     out = []

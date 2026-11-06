@@ -267,6 +267,21 @@ def create_indexes(db) -> None:
     db.route_cache.create_index([("created_at", ASCENDING)], expireAfterSeconds=7 * 24 * 3600)
 
 
+def reapply_admin_overrides(db) -> int:
+    """Edits made in the admin panel are kept in `place_overrides`; put them back after a re-import."""
+    n = 0
+    for o in db.place_overrides.find({}):
+        fields = o.get("fields") or {}
+        if fields and db.places.update_one(
+            {"_id": o["_id"]},
+            {"$set": {**fields, "admin_edited_at": o.get("updated_at"), "admin_edited_by": o.get("updated_by")}},
+        ).matched_count:
+            n += 1
+    if n:
+        print(f"[import] re-applied admin edits to {n} places")
+    return n
+
+
 def build_hotels(db, report: dict) -> None:
     """hotels = lodging places from the real places data (no synthetic rows)."""
     db.hotels.delete_many({})
@@ -278,7 +293,7 @@ def build_hotels(db, report: dict) -> None:
                 "place_id": "$place_id",
                 "name": 1, "primary_type": 1, "types": 1, "address": 1, "province": 1, "province_en": 1,
                 "district": 1, "location": 1, "lat": 1, "lng": 1, "rating": 1, "rating_count": 1,
-                "google_maps_url": 1,
+                "google_maps_url": 1, "hidden": 1,
                 "price_usd_min": "$booking.price_usd_min",
                 "price_usd_median": "$booking.price_usd_median",
                 "booking_rating_10": "$booking.rating_10",
@@ -341,6 +356,7 @@ def main(argv=None) -> dict:
     report["places"]["without_rating"] = sum(d["rating"] is None for d in place_docs)
     place_ids = {d["_id"] for d in place_docs}
     print(f"[import] places imported: {len(place_docs)}")
+    report["places"]["admin_overrides_reapplied"] = reapply_admin_overrides(db)
 
     print(f"[import] reading {rf.name} ...")
     reviews_df = pd.read_csv(rf, low_memory=False, dtype={"place_id": str})

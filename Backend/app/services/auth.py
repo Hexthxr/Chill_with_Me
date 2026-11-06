@@ -163,11 +163,23 @@ async def require_user(authorization: str | None = Header(default=None)) -> dict
     return user
 
 
+ROLES = ("user", "admin")
+
+
+async def require_admin(authorization: str | None = Header(default=None)) -> dict:
+    """Signed-in user whose users.role is "admin" (set with: python -m scripts.set_admin <phone>)."""
+    user = await require_user(authorization)
+    if user.get("role") != "admin":
+        raise APIError(403, "forbidden", "เฉพาะผู้ดูแลระบบเท่านั้น")
+    return user
+
+
 def user_out(u: dict) -> dict:
     return {
         "id": str(u["_id"]),
         "name": u["name"],
         "phone": display_phone(u["phone"]),
+        "role": u.get("role") if u.get("role") in ROLES else "user",
         "interests": u.get("interests", []),
         "has_password": bool(u.get("password_hash")),
         "created_at": u["created_at"].isoformat() if u.get("created_at") else None,

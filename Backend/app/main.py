@@ -13,7 +13,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from . import db as dbmod
 from . import errors
 from .config import settings
-from .routers import activity, auth, hotels, meta, places, planner, recommend, trips
+from .routers import activity, admin, auth, hotels, meta, places, planner, recommend, trips
 from .services.auth import ensure_indexes as ensure_auth_indexes
 from .services.ml_service import ml_service
 
@@ -27,6 +27,7 @@ async def lifespan(app: FastAPI):
     log.info("MongoDB connected: %s", settings.mongodb_db)
     await ensure_auth_indexes(database)
     await activity.ensure_indexes(database)
+    await admin.ensure_indexes(database)
     log.info("SMS provider: %s", settings.resolved_sms_provider())
     await ml_service.load(database)
     log.info("Routing provider: %s", settings.resolved_routing_provider())
@@ -49,5 +50,5 @@ app.add_middleware(
 )
 errors.install(app)
 
-for r in (auth.router, activity.router, meta.router, places.router, recommend.router, hotels.router, planner.router, trips.router):
+for r in (auth.router, admin.router, activity.router, meta.router, places.router, recommend.router, hotels.router, planner.router, trips.router):
     app.include_router(r)

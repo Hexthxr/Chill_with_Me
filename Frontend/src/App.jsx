@@ -1,9 +1,15 @@
 import { useEffect, useRef } from 'react'
 import { Link, Route, Routes } from 'react-router-dom'
 import Layout from './components/Layout'
+import RequireAdmin from './components/RequireAdmin'
 import RequireAuth from './components/RequireAuth'
+import { api } from './lib/api'
 import { EmptyState } from './components/States'
 import Account from './pages/Account'
+import AdminAudit from './pages/admin/AdminAudit'
+import AdminDashboard from './pages/admin/AdminDashboard'
+import AdminPlaceEdit from './pages/admin/AdminPlaceEdit'
+import AdminPlaces from './pages/admin/AdminPlaces'
 import ForgotPassword from './pages/ForgotPassword'
 import Home from './pages/Home'
 import Login from './pages/Login'
@@ -34,10 +40,21 @@ function useResetDraftOnUserChange() {
   }, [uid])
 }
 
+/** Refresh the stored profile once per page load so role changes (e.g. made admin) show up without re-login. */
+function useRefreshUser() {
+  const token = useAuth((s) => s.token)
+  useEffect(() => {
+    if (!token) return
+    api.me().then((u) => useAuth.getState().setUser(u)).catch(() => {})
+  }, [token])
+}
+
 const member = (el) => <RequireAuth>{el}</RequireAuth>
+const admin = (el) => <RequireAdmin>{el}</RequireAdmin>
 
 export default function App() {
   useResetDraftOnUserChange()
+  useRefreshUser()
   return (
     <Routes>
       <Route element={<Layout />}>
@@ -52,6 +69,10 @@ export default function App() {
         <Route path="register" element={<Register />} />
         <Route path="forgot-password" element={<ForgotPassword />} />
         <Route path="account" element={<Account />} />
+        <Route path="admin" element={admin(<AdminDashboard />)} />
+        <Route path="admin/places" element={admin(<AdminPlaces />)} />
+        <Route path="admin/places/:id" element={admin(<AdminPlaceEdit />)} />
+        <Route path="admin/audit" element={admin(<AdminAudit />)} />
         <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>

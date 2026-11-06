@@ -135,6 +135,14 @@ npm run dev                          # http://localhost:5173 (proxy /api → :80
 - แจ้งเตือน: เวลาเปิด–ปิดที่ผู้ใช้กรอก, จบเกินเวลาที่ตั้ง/เลยเที่ยงคืน, > 6 สถานที่ต่อวัน, เดินทางนานเกินครึ่งวัน, ช่วงเดินทาง > 3 ชม., ยังไม่มีมื้อกลางวัน/เวลาพัก/ที่พักคืนนั้น
 - “จัดลำดับให้เดินทางน้อยที่สุด”: จุดแรก, โรงแรมท้ายวัน และ Block ที่ล็อกเวลาอยู่ที่เดิม
 
+## ผู้ดูแลระบบ (Admin)
+- ตั้งสิทธิ์: สมัครสมาชิกบนเว็บก่อน แล้วรัน `run admin 0812345678` (หรือ `python -m scripts.set_admin 0812345678`, ถอนสิทธิ์ `--revoke`, ดูรายชื่อ `--list`) จากนั้นรีโหลดหน้าเว็บ จะมีเมนู “ผู้ดูแลระบบ”
+- `/admin` แดชบอร์ด: ผู้ใช้ ทริป การเปิดดู (กราฟ 30 วัน), สถานที่ยอดนิยม, จังหวัดในทริป, สถานะข้อมูลและโมเดล ML
+- `/admin/places` ค้นหา/แก้ไขสถานที่: ชื่อ ที่อยู่ อำเภอ จังหวัด พิกัด ลิงก์ Google Maps ประเภท ร้านอาหาร และ **ซ่อน** (ไม่ลบ) — คะแนน/รีวิว/ผล ML เป็นข้อมูลจริงจึงแก้ไม่ได้
+- สถานที่ที่ซ่อนจะหายจากการค้นหา แนะนำ ที่คล้ายกัน และที่พักทันที (ไม่ต้อง train ใหม่)
+- ทุกการแก้ไขเก็บใน `admin_audit` (ดูที่ `/admin/audit`) และค่าล่าสุดเก็บใน `place_overrides` ซึ่ง `import_csv` จะนำกลับมาใส่หลังนำเข้า CSV ใหม่
+- Backend ตรวจสิทธิ์ทุก `/api/admin/*` (401 ถ้าไม่ล็อกอิน, 403 ถ้าไม่ใช่ admin)
+
 ## REST API หลัก
 `GET /api/health` · `GET /api/meta/{stats,provinces,interests,ml}` · `GET /api/recommend` · `GET /api/places` · `GET /api/places/{id}` · `/reviews` · `/similar` · `GET /api/hotels/near` · `POST /api/hotels/along-route` · `POST /api/planner/compute` · `POST /api/planner/optimize` · `POST /api/routing/legs` · `GET|POST /api/trips` · `GET|PUT|DELETE /api/trips/{id}`
 

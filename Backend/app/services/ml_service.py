@@ -17,7 +17,7 @@ SIGNAL_PROJECTION = {
     "name": 1, "province": 1, "province_en": 1, "primary_type": 1, "types": 1, "rating": 1,
     "rating_count": 1, "is_accommodation": 1, "ml.quality_score": 1, "ml.sentiment_score": 1,
     "ml.popularity_score": 1, "ml.sentiment.n_analyzed": 1, "ml.sentiment.positive_share": 1,
-    "ml.sentiment.best_aspect": 1,
+    "ml.sentiment.best_aspect": 1, "hidden": 1,
 }
 
 
@@ -50,6 +50,7 @@ class MLService:
                 "quality_score": ml.get("quality_score", 0.5), "sentiment_score": ml.get("sentiment_score", 0.5),
                 "popularity_score": ml.get("popularity_score", 0.0), "sent_n": sent.get("n_analyzed", 0),
                 "sent_pos_share": sent.get("positive_share"), "best_aspect": sent.get("best_aspect"),
+                "hidden": bool(d.get("hidden", False)),
             })
         if not rows:
             self.error = "ไม่พบข้อมูล ML ในฐานข้อมูล — รัน `python -m scripts.build_ml`"

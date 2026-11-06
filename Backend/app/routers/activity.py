@@ -46,7 +46,7 @@ class ActivityIn(BaseModel):
 @router.post("/activity", status_code=204)
 async def log_activity(body: ActivityIn, user: dict = Depends(require_user)):
     db = get_db()
-    if not await db.places.find_one({"_id": body.place_id}, {"_id": 1}):
+    if not await db.places.find_one({"_id": body.place_id, "hidden": {"$ne": True}}, {"_id": 1}):
         raise APIError(404, "not_found", "ไม่พบสถานที่นี้")
     now = datetime.now(timezone.utc)
     # collapse repeated views of the same place within 30 minutes (page refreshes) - single atomic upsert
@@ -95,7 +95,7 @@ async def _history(user_id) -> tuple[list[str], dict[str, float], set[str]]:
 
 
 async def _cards(ids: list[str]) -> dict[str, dict]:
-    return {d["_id"]: place_card(d) async for d in get_db().places.find({"_id": {"$in": ids}}, CARD_PROJECTION)}
+    return {d["_id"]: place_card(d) async for d in get_db().places.find({"_id": {"$in": ids}, "hidden": {"$ne": True}}, CARD_PROJECTION)}
 
 
 @router.get("/recommend/personal")
