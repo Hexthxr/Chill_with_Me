@@ -47,11 +47,11 @@ function Start-Mongo {
 
 function Open-Window([string]$Title, [string]$Dir, [string]$Cmd) {
     $script = "`$Host.UI.RawUI.WindowTitle = '$Title'; Set-Location '$Dir'; $Cmd"
-    Start-Process powershell -ArgumentList "-NoExit", "-NoProfile", "-Command", $script
+    Start-Process powershell -ArgumentList "-NoExit", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", $script
 }
 
 $ApiCmd = "& '$VenvPy' -m uvicorn app.main:app --reload --port 8000"
-$WebCmd = "npm run dev"
+$WebCmd = "npm.cmd run dev"
 
 switch ($Command.ToLower()) {
     "dev" {
@@ -65,7 +65,7 @@ switch ($Command.ToLower()) {
         Write-Host "Close a window (or Ctrl+C in it) to stop that part."
     }
     "api"   { Need-Venv; Start-Mongo; Invoke-In $Backend { & $VenvPy -m uvicorn app.main:app --reload --port 8000 } }
-    "web"   { Invoke-In $Frontend { npm run dev } }
+    "web"   { Invoke-In $Frontend { npm.cmd run dev } }
     "mongo" { Start-Mongo }
     "setup" {
         if (-not (Test-Path $VenvPy)) {
@@ -73,7 +73,7 @@ switch ($Command.ToLower()) {
             Invoke-In $Backend { python -m venv .venv }
         }
         Invoke-In $Backend { & $VenvPy -m pip install -r requirements.txt }
-        Invoke-In $Frontend { npm install }
+        Invoke-In $Frontend { npm.cmd install }
         Write-Host "Setup done. Next: '.\run data' (first time only), then '.\run dev'." -ForegroundColor Green
     }
     "data" {
@@ -87,7 +87,7 @@ switch ($Command.ToLower()) {
     "test" {
         Need-Venv
         Invoke-In $Backend { & $VenvPy -m pytest @Rest }
-        Invoke-In $Frontend { npm test }
+        Invoke-In $Frontend { npm.cmd test }
     }
     "admin" {
         Need-Venv
