@@ -19,7 +19,7 @@ export default function DayColumn({ index, day, computedDay, onOptimize, optimiz
     <section
       aria-label={`วันที่ ${index + 1}`}
       onClick={() => !active && setActive(index)}
-      className={`flex w-full shrink-0 flex-col rounded-3xl p-3 transition-colors md:w-[340px] ${active ? 'bg-leaf/60 ring-2 ring-forest/30' : 'bg-sand/60'}`}
+      className={`flex w-full shrink-0 flex-col rounded-3xl p-3 transition md:w-[340px] ${active ? 'bg-leaf/60 ring-2 ring-forest/30' : 'cursor-pointer bg-sand/60 hover:bg-sand'}`}
     >
       <header className="px-1 pb-2">
         <div className="flex items-center justify-between gap-2">
@@ -28,7 +28,7 @@ export default function DayColumn({ index, day, computedDay, onOptimize, optimiz
             <span className="ml-2 font-sans text-sm text-muted">{fmtThaiDate(addDaysISO(startDate, index))}</span>
           </h3>
           {!active && <span className="text-xs text-muted">แตะเพื่อเลือก</span>}
-          {active && <span className="rounded-full bg-forest px-2 py-0.5 text-xs text-white">กำลังเพิ่มลงวันนี้</span>}
+          {active && <span className="fade-up flex items-center gap-1.5 rounded-full bg-forest px-2 py-0.5 text-xs text-white"><span className="ping relative h-1.5 w-1.5 rounded-full bg-[#ffc56b]" aria-hidden="true" />กำลังเพิ่มลงวันนี้</span>}
         </div>
         <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted">
           <label className="flex items-center gap-1">
@@ -43,10 +43,10 @@ export default function DayColumn({ index, day, computedDay, onOptimize, optimiz
         </div>
       </header>
 
-      <div ref={setNodeRef} className={`min-h-28 flex-1 rounded-2xl p-1 ${isOver ? 'bg-white/60' : ''}`}>
+      <div ref={setNodeRef} className={`min-h-28 flex-1 rounded-2xl p-1 transition ${isOver ? 'bg-white/70 ring-2 ring-moss/60' : ''}`}>
         <SortableContext items={day.blocks.map((b) => b.id)} strategy={verticalListSortingStrategy}>
           {day.blocks.length === 0 ? (
-            <div className="grid h-28 place-items-center rounded-2xl border-2 border-dashed border-forest/20 px-4 text-center text-sm text-muted">
+            <div className={`grid h-28 place-items-center rounded-2xl border-2 border-dashed px-4 text-center text-sm transition ${isOver ? 'border-forest text-forest' : 'border-forest/20 text-muted'}`}>
               ลาก Block มาวางที่นี่ หรือเพิ่มจากแผงด้านซ้าย
             </div>
           ) : (
@@ -72,9 +72,10 @@ export default function DayColumn({ index, day, computedDay, onOptimize, optimiz
             onOptimize(index)
           }}
           disabled={optimizing}
-          className="mt-3 rounded-full bg-white px-3 py-2 text-xs font-medium text-forest ring-1 ring-forest/20 hover:ring-forest/50 disabled:opacity-50"
+          aria-busy={optimizing || undefined}
+          className="btn-ripple mt-3 rounded-full bg-white px-3 py-2 text-xs font-medium text-forest ring-1 ring-forest/20 transition hover:-translate-y-0.5 hover:shadow-md hover:ring-forest/50 disabled:opacity-50"
         >
-          {optimizing ? 'กำลังคำนวณ…' : 'จัดลำดับให้เดินทางน้อยที่สุด'}
+          {optimizing ? 'กำลังคำนวณ…' : <><span aria-hidden="true">✨ </span>จัดลำดับให้เดินทางน้อยที่สุด</>}
         </button>
       )}
     </section>

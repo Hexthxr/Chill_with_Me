@@ -88,6 +88,7 @@ export const api = {
   place: (id) => request(`/api/places/${encodeURIComponent(id)}`),
   placeReviews: (id, params) => request(`/api/places/${encodeURIComponent(id)}/reviews`, { params }),
   similar: (id) => request(`/api/places/${encodeURIComponent(id)}/similar`),
+  placePhoto: (id) => request(`/api/places/${encodeURIComponent(id)}/photo`),
   hotelsNear: (params) => request('/api/hotels/near', { params }),
   hotelsAlongRoute: (body) => request('/api/hotels/along-route', { method: 'POST', body }),
   hotelCoverage: () => request('/api/hotels/coverage'),
@@ -99,6 +100,8 @@ export const api = {
   createTrip: (body) => request('/api/trips', { method: 'POST', body }),
   updateTrip: (id, body) => request(`/api/trips/${id}`, { method: 'PUT', body }),
   deleteTrip: (id) => request(`/api/trips/${id}`, { method: 'DELETE' }),
+  notifications: () => request('/api/notifications'),
+  markNotificationsRead: (keys) => request('/api/notifications/read', { method: 'POST', body: { keys } }),
   admin: {
     stats: () => request('/api/admin/stats'),
     options: () => request('/api/admin/options'),

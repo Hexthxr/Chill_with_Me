@@ -1,18 +1,26 @@
 import L from 'leaflet'
-import { useEffect, useMemo } from 'react'
+import { Fragment, useEffect, useMemo } from 'react'
 import { CircleMarker, MapContainer, Marker, Polyline, Popup, TileLayer, useMap } from 'react-leaflet'
 
 const TILE_URL = import.meta.env.VITE_MAP_TILE_URL || 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
 const ATTRIBUTION = import.meta.env.VITE_MAP_ATTRIBUTION || '&copy; OpenStreetMap contributors'
 const TH_CENTER = [13.4, 100.9]
 
+// Icons are shared so a re-render doesn't rebuild the marker (and replay its drop-in animation).
+const iconCache = new Map()
 function numIcon(label, kind, start) {
-  return L.divIcon({
-    className: '',
-    html: `<div class="num-marker kind-${kind || 'place'} ${start ? 'start' : ''}">${label}</div>`,
-    iconSize: [28, 28],
-    iconAnchor: [14, 14],
-  })
+  const key = `${label}|${kind}|${start}`
+  if (!iconCache.has(key))
+    iconCache.set(
+      key,
+      L.divIcon({
+        className: '',
+        html: `<div class="num-marker kind-${kind || 'place'} ${start ? 'start' : ''}">${label}</div>`,
+        iconSize: [28, 28],
+        iconAnchor: [14, 14],
+      }),
+    )
+  return iconCache.get(key)
 }
 
 function FitBounds({ points }) {
@@ -43,14 +51,18 @@ export default function MapView({ markers = [], routes = [], dots = [], classNam
         <FitBounds points={points} />
         {onMapClick && <ClickHandler onClick={onMapClick} />}
         {routes.map((r, i) => (
-          <Polyline
-            key={i}
-            positions={r.positions}
-            pathOptions={{ color: r.color || '#2067da', weight: 4, opacity: 0.85, dashArray: r.estimate ? '6 8' : undefined }}
-          />
+          <Fragment key={i}>
+            <Polyline
+              positions={r.positions}
+              className={r.estimate ? 'route-flow-dashed' : undefined}
+              pathOptions={{ color: r.color || '#0e7490', weight: 4, opacity: 0.85, dashArray: r.estimate ? '6 8' : undefined }}
+            />
+            {/* travelling dots show the direction of a real road route */}
+            {!r.estimate && <Polyline positions={r.positions} className="route-flow" interactive={false} pathOptions={{ color: '#fff', weight: 2, opacity: 0.9 }} />}
+          </Fragment>
         ))}
         {dots.map((d, i) => (
-          <CircleMarker key={`d${i}`} center={[d.lat, d.lng]} radius={6} pathOptions={{ color: '#fff', weight: 2, fillColor: d.color || '#4f8fe6', fillOpacity: 1 }}>
+          <CircleMarker key={`d${i}`} center={[d.lat, d.lng]} radius={6} pathOptions={{ color: '#fff', weight: 2, fillColor: d.color || '#2a9db5', fillOpacity: 1 }}>
             {d.title && <Popup>{d.title}</Popup>}
           </CircleMarker>
         ))}

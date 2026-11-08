@@ -10,6 +10,7 @@ from ml.aspects import ASPECTS
 from ..db import get_db
 from ..errors import APIError
 from ..serializers import CARD_PROJECTION, place_card, review_out
+from ..services import photos
 from ..services.ml_service import ml_service
 
 router = APIRouter(prefix="/api/places", tags=["places"])
@@ -91,6 +92,21 @@ async def place_detail(place_id: str):
             "quality_bayes": ml.get("quality_bayes"),
         },
     }
+
+
+@router.get("/{place_id}/photo")
+async def place_photo(place_id: str):
+    """A real photo with its credit, or {"photo": null} when none was found (the UI keeps its illustration)."""
+    d = await get_db().places.find_one(
+        {"_id": place_id}, {"name": 1, "lat": 1, "lng": 1, "is_accommodation": 1, "is_food": 1, "hidden": 1}
+    )
+    if not d or d.get("hidden"):
+        raise APIError(404, "not_found", "ไม่พบสถานที่นี้")
+    try:
+        return {"photo": await photos.photo_for(d)}
+    except photos.PhotoLookupError as e:
+        photos.log.warning("photo lookup failed for %s: %s", place_id, e)
+        return {"photo": None}
 
 
 @router.get("/{place_id}/reviews")

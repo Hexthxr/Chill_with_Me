@@ -28,9 +28,9 @@ export function EmptyState({ title, children, action }) {
   return (
     <div className="rounded-2xl border border-dashed border-moss/40 bg-white/60 px-6 py-12 text-center">
       <svg viewBox="0 0 120 60" className="mx-auto mb-4 h-14 w-28 text-moss" aria-hidden="true">
-        <path d="M5 50 Q30 10 60 30 T115 20" fill="none" stroke="currentColor" strokeWidth="2" strokeDasharray="4 5" />
+        <path className="dash-flow" d="M5 50 Q30 10 60 30 T115 20" fill="none" stroke="currentColor" strokeWidth="2" strokeDasharray="4 5" />
         <circle cx="5" cy="50" r="4" fill="currentColor" />
-        <circle cx="115" cy="20" r="4" fill="none" stroke="currentColor" strokeWidth="2" />
+        <circle className="pin-bob" cx="115" cy="20" r="4" fill="none" stroke="currentColor" strokeWidth="2" />
       </svg>
       <h3 className="text-lg text-forest">{title}</h3>
       {children && <div className="mx-auto mt-2 max-w-md text-muted">{children}</div>}

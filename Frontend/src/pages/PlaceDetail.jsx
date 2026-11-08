@@ -3,11 +3,13 @@ import { Link, useParams } from 'react-router-dom'
 import { Rating, SentimentPill } from '../components/Bits'
 import MapView from '../components/MapView'
 import PlaceArt from '../components/PlaceArt'
-import { useAddToTrip } from '../components/PlaceCard'
+import { CountUp, Reveal } from '../components/Motion'
+import { AddTripButton } from '../components/PlaceCard'
 import { EmptyState, ErrorState, Spinner } from '../components/States'
 import { api } from '../lib/api'
 import { fmtInt, fmtPct, fmtRating } from '../lib/format'
 import { useAuth } from '../store/authStore'
+import { useToast } from '../store/tripStore'
 
 function AspectBars({ aspects }) {
   if (!aspects?.length) return <p className="text-sm text-muted">รีวิวยังพูดถึงประเด็นเฉพาะไม่มากพอ</p>
@@ -22,7 +24,7 @@ function AspectBars({ aspects }) {
             </span>
           </div>
           <div className="mt-1 flex h-2.5 overflow-hidden rounded-full bg-alert-soft" aria-hidden="true">
-            <div className="bg-moss" style={{ width: `${a.positive_share * 100}%` }} />
+            <div className="bar-grow bg-moss" style={{ width: `${a.positive_share * 100}%` }} />
           </div>
         </li>
       ))}
@@ -41,7 +43,7 @@ function RatingDist({ dist }) {
           <li key={s} className="flex items-center gap-2 text-sm">
             <span className="w-8 text-muted">{s} ดาว</span>
             <span className="h-2 flex-1 overflow-hidden rounded-full bg-sand" aria-hidden="true">
-              <span className="block h-full bg-sun" style={{ width: `${(n / total) * 100}%` }} />
+              <span className="bar-grow block h-full bg-sun" style={{ width: `${(n / total) * 100}%` }} />
             </span>
             <span className="w-10 text-right text-muted">{fmtInt(n)}</span>
           </li>
@@ -54,7 +56,7 @@ function RatingDist({ dist }) {
 function ReviewItem({ r }) {
   const s = r.sentiment
   return (
-    <li className="rounded-2xl card-sky p-4 ring-1 ring-forest/5">
+    <li className="fade-up rounded-2xl card-sky p-4 ring-1 ring-forest/5">
       <div className="flex flex-wrap items-center gap-2 text-sm">
         {r.rating != null && <span className="font-semibold">{fmtRating(r.rating)} ดาว</span>}
         {s && (
@@ -88,7 +90,7 @@ function Reviews({ placeId }) {
           ['positive', 'เชิงบวก'],
           ['negative', 'เชิงลบ'],
         ].map(([k, l]) => (
-          <button key={k} role="tab" aria-selected={filter === k} onClick={() => { setFilter(k); setOffset(0) }} className={`rounded-full px-4 py-1.5 text-sm font-medium ${filter === k ? 'bg-forest text-white' : 'text-forest hover:bg-mist'}`}>
+          <button key={k} role="tab" aria-selected={filter === k} onClick={() => { setFilter(k); setOffset(0) }} className={`rounded-full px-4 py-1.5 text-sm font-medium transition ${filter === k ? 'chip-on bg-forest text-white' : 'text-forest hover:bg-mist'}`}>
             {l}
           </button>
         ))}
@@ -98,7 +100,7 @@ function Reviews({ placeId }) {
       <ul className="space-y-3">{data.items?.map((r) => <ReviewItem key={r.record_id} r={r} />)}</ul>
       {data.loading && <div className="mt-3"><Spinner /></div>}
       {data.total > (data.items?.length || 0) && !data.loading && (
-        <button onClick={() => setOffset(data.items.length)} className="mt-4 rounded-full px-4 py-2 text-sm font-medium text-forest ring-1 ring-forest/25 hover:bg-white">
+        <button onClick={() => setOffset(data.items.length)} className="btn-ripple mt-4 rounded-full px-4 py-2 text-sm font-medium text-forest ring-1 ring-forest/25 transition hover:-translate-y-0.5 hover:bg-white hover:shadow-md">
           ดูรีวิวเพิ่ม ({fmtInt(data.total - data.items.length)})
         </button>
       )}
@@ -111,7 +113,7 @@ export default function PlaceDetail() {
   const [state, setState] = useState({ loading: true })
   const [similar, setSimilar] = useState([])
   const [hotels, setHotels] = useState(null)
-  const add = useAddToTrip()
+  const push = useToast((s) => s.push)
   const loggedIn = useAuth((s) => !!s.token)
 
   const load = () => {
@@ -138,15 +140,23 @@ export default function PlaceDetail() {
     )
   const p = state.p
   const a = p.analysis
+  const share = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href)
+      push('คัดลอกลิงก์สถานที่แล้ว')
+    } catch {
+      push('คัดลอกลิงก์ไม่สำเร็จ', 'error')
+    }
+  }
 
   return (
     <div>
       <div className="relative">
-        <PlaceArt place={p} className="h-48 sm:h-64" showLabel={false} w={1200} h={320} />
+        <PlaceArt place={p} className="h-48 sm:h-64" showLabel={false} live showCredit w={1200} h={240} />
       </div>
       <div className="mx-auto -mt-16 max-w-7xl px-4 sm:px-6">
-        <div className="relative rounded-3xl card-sky p-6 ring-1 ring-forest/5 sm:p-8">
-          <p className="text-sm font-medium text-moss">{p.primary_type || 'สถานที่'}</p>
+        <div className="fade-up relative rounded-3xl card-sky p-6 ring-1 ring-forest/5 sm:p-8">
+          <p className="text-sm font-medium text-[#b94f28]">{p.primary_type || 'สถานที่'}</p>
           <h1 className="mt-1 text-3xl text-ink sm:text-4xl">{p.name}</h1>
           <p className="mt-1 text-muted">{p.address}</p>
           <div className="mt-3 flex flex-wrap items-center gap-3">
@@ -155,12 +165,16 @@ export default function PlaceDetail() {
             {p.ml.top_interest_label && <span className="rounded-full bg-mist px-2.5 py-0.5 text-xs font-medium text-forest">เด่นด้าน{p.ml.top_interest_label}</span>}
           </div>
           <div className="mt-5 flex flex-wrap gap-2">
-            {loggedIn && <button onClick={() => add(p)} className="rounded-full btn-primary px-5 py-2.5 text-sm font-medium text-white">เพิ่มลงทริป</button>}
+            {loggedIn && <AddTripButton place={p} className="px-5 py-2.5" />}
             {p.google_maps_url && (
-              <a href={p.google_maps_url} target="_blank" rel="noreferrer" className="rounded-full px-5 py-2.5 text-sm font-medium text-forest ring-1 ring-forest/25 hover:bg-mist">
+              <a href={p.google_maps_url} target="_blank" rel="noreferrer" className="btn-ripple rounded-full px-5 py-2.5 text-sm font-medium text-forest ring-1 ring-forest/25 transition hover:-translate-y-0.5 hover:bg-mist hover:shadow-md">
                 เปิดใน Google Maps
               </a>
             )}
+            <button onClick={share} className="btn-ripple inline-flex items-center gap-1.5 rounded-full px-5 py-2.5 text-sm font-medium text-forest ring-1 ring-forest/25 transition hover:-translate-y-0.5 hover:bg-mist hover:shadow-md">
+              <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M10 14a4 4 0 005.700 0l3-3a4 4 0 00-5.700-5.700l-1 1M14 10a4 4 0 00-5.700 0l-3 3a4 4 0 005.700 5.700l1-1" /></svg>
+              คัดลอกลิงก์
+            </button>
           </div>
           {p.has_hours_on_google && (
             <p className="mt-4 text-sm text-muted">ชุดข้อมูลไม่มีเวลาเปิด–ปิด แต่ Google Maps มีข้อมูลนี้ — ตรวจสอบก่อนเดินทาง แล้วใส่เวลาเปิด–ปิดใน Trip Planner เพื่อให้ระบบเตือน</p>
@@ -184,17 +198,17 @@ export default function PlaceDetail() {
               <>
                 <div className="mt-5 grid gap-6 sm:grid-cols-[200px_1fr]">
                   <div className="rounded-2xl bg-mist p-5 text-center">
-                    <p className="font-display text-5xl text-forest">{fmtPct(a.positive_share)}</p>
+                    <CountUp value={a.positive_share} format={fmtPct} duration={1200} className="block font-display text-5xl text-forest" />
                     <p className="mt-1 text-sm text-muted">รีวิวเชิงบวก จาก {fmtInt(a.n_analyzed)} ข้อความที่ ML วิเคราะห์</p>
                   </div>
                   <div>
                     {a.best_aspect_label && <p className="mb-2 text-[15px]">จุดที่คนชมมากที่สุด: <b className="text-forest">{a.best_aspect_label}</b></p>}
                     {a.concerns.length > 0 && <p className="mb-3 text-[15px]">เรื่องที่ควรรู้ก่อนไป: <b className="text-alert">{a.concerns.map((c) => c.label).join(', ')}</b></p>}
-                    <RatingDist dist={a.rating_distribution} />
+                    <Reveal><RatingDist dist={a.rating_distribution} /></Reveal>
                   </div>
                 </div>
                 <h3 className="mt-8 text-lg text-ink">ประเด็นสำคัญจากรีวิว</h3>
-                <div className="mt-3"><AspectBars aspects={a.aspects} /></div>
+                <Reveal className="mt-3"><AspectBars aspects={a.aspects} /></Reveal>
 
                 {(a.highlights.positive.length > 0 || a.highlights.negative.length > 0) && (
                   <>
@@ -215,7 +229,7 @@ export default function PlaceDetail() {
         </div>
 
         <aside className="space-y-8">
-          <MapView className="h-64" markers={[{ lat: p.lat, lng: p.lng, label: '●', title: p.name }]} dots={(hotels?.items || []).map((h) => ({ lat: h.lat, lng: h.lng, title: h.name, color: '#4a5a8a' }))} />
+          <MapView className="h-64" markers={[{ lat: p.lat, lng: p.lng, label: '●', title: p.name }]} dots={(hotels?.items || []).map((h) => ({ lat: h.lat, lng: h.lng, title: h.name, color: '#8a5a9e' }))} />
 
           {hotels && !p.is_accommodation && (
             <section>
@@ -225,7 +239,7 @@ export default function PlaceDetail() {
               ) : (
                 <ul className="mt-3 space-y-2">
                   {hotels.items.map((h) => (
-                    <li key={h.place_id} className="rounded-xl card-sky p-3 ring-1 ring-forest/5">
+                    <li key={h.place_id} className="rounded-xl card-sky p-3 ring-1 ring-forest/5 transition hover:translate-x-1 hover:ring-forest/30">
                       <Link to={`/place/${encodeURIComponent(h.place_id)}`} className="font-medium hover:underline">{h.name}</Link>
                       <div className="mt-0.5 flex flex-wrap gap-x-3 text-sm text-muted">
                         <span>{h.distance_km} กม.</span>
@@ -246,7 +260,7 @@ export default function PlaceDetail() {
               <ul className="mt-3 space-y-2">
                 {similar.map((s) => (
                   <li key={s.place_id}>
-                    <Link to={`/place/${encodeURIComponent(s.place_id)}`} className="flex items-center gap-3 rounded-xl card-sky p-2 ring-1 ring-forest/5 hover:ring-forest/30">
+                    <Link to={`/place/${encodeURIComponent(s.place_id)}`} className="group flex items-center gap-3 rounded-xl card-sky p-2 ring-1 ring-forest/5 transition hover:translate-x-1 hover:ring-forest/30">
                       <PlaceArt place={s} className="h-12 w-16 shrink-0 rounded-lg" showLabel={false} />
                       <span className="min-w-0">
                         <span className="block truncate font-medium">{s.name}</span>

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { InterestChips, useInterests } from '../components/Bits'
 import MapView from '../components/MapView'
+import { CountUp } from '../components/Motion'
 import PlaceCard from '../components/PlaceCard'
 import { CardSkeletons, EmptyState, ErrorState } from '../components/States'
 import { api } from '../lib/api'
@@ -194,7 +195,7 @@ export default function Recommend() {
               role="radio"
               aria-checked={mode === k}
               onClick={() => update({ mode: k === 'interest' ? null : k })}
-              className={`rounded-xl px-3 py-2 text-sm font-medium ${mode === k ? 'bg-white text-forest shadow-sm' : 'text-muted'}`}
+              className={`rounded-xl px-3 py-2 text-sm font-medium transition ${mode === k ? 'bg-white text-forest shadow-sm' : 'text-muted hover:text-ink'}`}
             >
               {label}
             </button>
@@ -209,7 +210,7 @@ export default function Recommend() {
           <label className="mt-4 block text-sm font-semibold text-forest" htmlFor="radius">
             รัศมี {radius} กม.
           </label>
-          <input id="radius" type="range" min={5} max={150} step={5} value={radius} onChange={(e) => update({ radius_km: e.target.value })} className="mt-1 w-full accent-[#2067da]" />
+          <input id="radius" type="range" min={5} max={150} step={5} value={radius} onChange={(e) => update({ radius_km: e.target.value })} className="mt-1 w-full accent-forest" />
         </div>
       )}
 
@@ -227,7 +228,7 @@ export default function Recommend() {
         <label htmlFor="rq" className="mb-2 block text-sm font-semibold text-forest">คำค้นเพิ่มเติม</label>
         <div className="flex gap-2">
           <input id="rq" value={qDraft} onChange={(e) => setQDraft(e.target.value)} placeholder="เช่น น้ำตก, ทะเลหมอก" className="min-w-0 flex-1 rounded-xl bg-white px-3 py-2 text-sm ring-1 ring-forest/15 outline-none focus:ring-2 focus:ring-moss" />
-          <button className="rounded-xl bg-forest px-3 text-sm font-medium text-white">ค้นหา</button>
+          <button className="btn-primary rounded-xl px-3 text-sm font-medium text-white">ค้นหา</button>
         </div>
       </form>
 
@@ -255,13 +256,14 @@ export default function Recommend() {
       </div>
 
       <label className="flex items-center gap-2 text-sm">
-        <input type="checkbox" checked={lodging} onChange={(e) => update({ lodging: e.target.checked ? 1 : null })} className="h-4 w-4 accent-[#2067da]" />
+        <input type="checkbox" checked={lodging} onChange={(e) => update({ lodging: e.target.checked ? 1 : null })} className="h-4 w-4 accent-forest" />
         แสดงเฉพาะที่พัก
       </label>
     </div>
   )
 
   const items = state.items || []
+  const activeFilters = picked.length + [q, province, minRating, lodging].filter(Boolean).length
   const markers = items.filter((p) => p.lat != null).map((p, i) => ({ lat: p.lat, lng: p.lng, label: i + 1, title: p.name, subtitle: p.province, kind: p.is_accommodation ? 'hotel' : 'place' }))
   if (start) markers.unshift({ lat: start.lat, lng: start.lng, label: '★', start: true, title: start.label })
 
@@ -274,10 +276,11 @@ export default function Recommend() {
 
       <button onClick={() => setShowFilters(!showFilters)} className="mt-5 w-full rounded-xl bg-white px-4 py-2.5 text-sm font-medium text-forest ring-1 ring-forest/15 lg:hidden" aria-expanded={showFilters}>
         {showFilters ? 'ซ่อนตัวกรอง' : 'ตัวกรองและโหมดแนะนำ'}
+        {activeFilters > 0 && <span key={activeFilters} className="pop-in ml-2 rounded-full bg-forest px-2 text-xs text-white">{activeFilters}</span>}
       </button>
 
       <div className="mt-6 grid gap-8 lg:grid-cols-[300px_1fr]">
-        <aside className={`${showFilters ? 'block' : 'hidden'} lg:block`}>
+        <aside className={`${showFilters ? 'fade-up block' : 'hidden'} lg:block`}>
           <div className="rounded-2xl card-sky p-5 ring-1 ring-forest/5 lg:sticky lg:top-24">{filters}</div>
         </aside>
 
@@ -288,7 +291,7 @@ export default function Recommend() {
 
           {state.total != null && !state.loading && (
             <p className="mb-4 text-sm text-muted">
-              พบ {fmtInt(state.total)} แห่ง{mode === 'location' && ` ในรัศมี ${radius} กม. (ระยะเส้นตรง)`}
+              พบ <CountUp value={state.total} className="font-semibold text-forest" /> แห่ง{mode === 'location' && ` ในรัศมี ${radius} กม. (ระยะเส้นตรง)`}
             </p>
           )}
 
@@ -303,11 +306,11 @@ export default function Recommend() {
           {items.length > 0 && (
             <>
               <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-                {items.map((p, i) => <PlaceCard key={p.place_id} place={p} rank={i + 1} />)}
+                {items.map((p, i) => <PlaceCard key={p.place_id} place={p} rank={i + 1} index={i % PAGE} />)}
               </div>
               {state.total > items.length && (
                 <div className="mt-8 text-center">
-                  <button disabled={state.loading} onClick={() => setPage(page + 1)} className="rounded-full bg-white px-6 py-2.5 font-medium text-forest ring-1 ring-forest/25 hover:bg-mist disabled:opacity-50">
+                  <button disabled={state.loading} aria-busy={state.loading || undefined} onClick={() => setPage(page + 1)} className="btn-ripple rounded-full bg-white px-6 py-2.5 font-medium text-forest ring-1 ring-forest/25 transition hover:-translate-y-0.5 hover:shadow-md disabled:opacity-50">
                     {state.loading ? 'กำลังโหลด…' : 'โหลดเพิ่ม'}
                   </button>
                 </div>

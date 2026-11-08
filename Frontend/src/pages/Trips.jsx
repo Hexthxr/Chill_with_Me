@@ -5,6 +5,7 @@ import { api } from '../lib/api'
 import { fmtDuration, fmtThaiDate, relativeTime } from '../lib/format'
 import { getOwnerKey } from '../lib/ownerKey'
 import { useAuth } from '../store/authStore'
+import { useNotifications } from '../store/notificationStore'
 import { useToast, useTrip } from '../store/tripStore'
 
 export default function Trips() {
@@ -26,6 +27,7 @@ export default function Trips() {
       await api.deleteTrip(t.id)
       if (currentId === t.id) resetDraft()
       push('ลบทริปแล้ว')
+      useNotifications.getState().load()
       load()
     } catch (e) {
       push(e.message, 'error')
@@ -50,12 +52,12 @@ export default function Trips() {
           </EmptyState>
         )}
         <ul className="space-y-4">
-          {state.items?.map((t) => {
+          {state.items?.map((t, i) => {
             const snap = t.schedule_snapshot || {}
             const wc = snap.warning_counts || {}
             const nDays = snap.days?.length
             return (
-              <li key={t.id} className="rounded-3xl card-sky p-5 ring-1 ring-forest/5">
+              <li key={t.id} style={{ '--i': i }} className="card-in card-lift rounded-3xl card-sky p-5 ring-1 ring-forest/5">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <h2 className="text-xl text-ink">{t.name}</h2>
@@ -73,8 +75,8 @@ export default function Trips() {
                   </div>
                   <div className="flex flex-wrap gap-2">
                     <Link to={`/trips/${t.id}`} className="rounded-full btn-primary px-4 py-2 text-sm font-medium text-white">ดูแผนรายวัน</Link>
-                    <Link to={`/planner/${t.id}`} className="rounded-full px-4 py-2 text-sm font-medium text-forest ring-1 ring-forest/25 hover:bg-mist">แก้ไข</Link>
-                    <button onClick={() => remove(t)} className="rounded-full px-4 py-2 text-sm font-medium text-alert hover:bg-alert-soft">ลบ</button>
+                    <Link to={`/planner/${t.id}`} className="btn-ripple rounded-full px-4 py-2 text-sm font-medium text-forest ring-1 ring-forest/25 transition hover:-translate-y-0.5 hover:bg-mist hover:shadow-md">แก้ไข</Link>
+                    <button onClick={() => remove(t)} className="btn-ripple rounded-full px-4 py-2 text-sm font-medium text-alert transition hover:bg-alert-soft">ลบ</button>
                   </div>
                 </div>
               </li>

@@ -4,17 +4,20 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { Button, RoutingNotice } from '../components/Bits'
 import MapView from '../components/MapView'
+import { CountUp } from '../components/Motion'
 import { ErrorState, Spinner } from '../components/States'
 import { api } from '../lib/api'
+import { confetti } from '../lib/fx'
 import { fmtDuration, fmtThaiDate } from '../lib/format'
 import { getOwnerKey } from '../lib/ownerKey'
 import AddPanel from '../planner/AddPanel'
 import BlockItem from '../planner/BlockItem'
 import DayColumn from '../planner/DayColumn'
 import { findBlock, toPayload } from '../planner/planUtils'
+import { useNotifications } from '../store/notificationStore'
 import { useToast, useTrip } from '../store/tripStore'
 
-export const DAY_COLORS = ['#2067da', '#0ea5e9', '#6366f1', '#14b8a6', '#0369a1', '#8b5cf6', '#06b6d4']
+export const DAY_COLORS = ['#0e7490', '#e2683f', '#3f9d7a', '#8a5a9e', '#d99a2b', '#2f6fb3', '#c94f7c']
 
 export function routeLayers(trip, schedule, onlyDay = null) {
   const markers = []
@@ -74,6 +77,7 @@ export default function Planner() {
   const [computing, setComputing] = useState(false)
   const [loadState, setLoadState] = useState(id ? { loading: true } : {})
   const [saving, setSaving] = useState(false)
+  const [justSaved, setJustSaved] = useState(false)
   const [dragId, setDragId] = useState(null)
   const [opt, setOpt] = useState(null)
   const [optimizing, setOptimizing] = useState(null)
@@ -145,13 +149,18 @@ export default function Planner() {
     if (from.day === to.day && to.index !== Infinity && from.index !== to.index) trip.move(active.id, to.day, to.index)
   }
 
-  const save = async () => {
+  const save = async (btn) => {
+    const firstSave = !trip.tripId
     setSaving(true)
     try {
       const body = { ...payload, owner_key: getOwnerKey() }
       const doc = trip.tripId ? await api.updateTrip(trip.tripId, body) : await api.createTrip(body)
       trip.markSaved(doc.id)
+      useNotifications.getState().load() // the trip's date may have just entered the reminder window
       push('บันทึกทริปลงฐานข้อมูลแล้ว')
+      setJustSaved(true)
+      setTimeout(() => setJustSaved(false), 2400)
+      if (firstSave) confetti(btn)
       if (id !== doc.id) navigate(`/planner/${doc.id}`, { replace: true })
     } catch (e) {
       if (e.status === 404 && trip.tripId) {
@@ -202,14 +211,15 @@ export default function Planner() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-gradient-sky pb-1 text-3xl font-semibold">วางแผนทริป</h1>
-          <p className="text-sm text-muted">
+          <p className="flex items-center gap-2 text-sm text-muted">
+            <span className={`relative h-2 w-2 shrink-0 rounded-full ${trip.tripId && !trip.dirty ? 'bg-[#3f9d7a]' : 'ping bg-sun'}`} aria-hidden="true" />
             {trip.tripId ? (trip.dirty ? 'มีการแก้ไขที่ยังไม่บันทึก' : 'บันทึกแล้ว') : 'แบบร่าง (เก็บไว้ในเบราว์เซอร์นี้จนกว่าจะบันทึก)'}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Button variant="ghost" onClick={newTrip}>เริ่มทริปใหม่</Button>
           {trip.tripId && <Button variant="ghost" onClick={() => navigate(`/trips/${trip.tripId}`)} disabled={trip.dirty} title={trip.dirty ? 'บันทึกก่อนดูรายละเอียด' : ''}>ดูรายละเอียดทริป</Button>}
-          <Button onClick={save} disabled={saving || totalBlocks === 0}>{saving ? 'กำลังบันทึก…' : trip.tripId ? 'บันทึกการแก้ไข' : 'บันทึกทริป'}</Button>
+          <Button onClick={(e) => save(e.currentTarget)} loading={saving} disabled={saving || totalBlocks === 0}>{saving ? 'กำลังบันทึก…' : justSaved ? <><span className="pop-in" aria-hidden="true">✓</span> บันทึกแล้ว</> : trip.tripId ? 'บันทึกการแก้ไข' : 'บันทึกทริป'}</Button>
         </div>
       </div>
 
@@ -219,7 +229,7 @@ export default function Planner() {
       {computeErr && <div className="mt-3"><ErrorState error={computeErr} /></div>}
 
       {opt && (
-        <div className="mt-4 flex flex-col gap-3 rounded-2xl bg-leaf/70 px-4 py-3 sm:flex-row sm:items-center sm:justify-between" role="status">
+        <div className="fade-up mt-4 flex flex-col gap-3 rounded-2xl bg-leaf/70 px-4 py-3 sm:flex-row sm:items-center sm:justify-between" role="status">
           <p className="text-sm">
             {opt.changed ? (
               <>วันที่ {opt.dayIndex + 1}: ลำดับใหม่ลดเวลาเดินทางจาก {fmtDuration(opt.travel_before_min)} เหลือ {fmtDuration(opt.travel_after_min)} (ประหยัด {fmtDuration(opt.saved_min)}){opt.is_estimate && ' — คำนวณจากค่าประมาณ'}. จุดแรก ที่พักท้ายวัน และ Block ที่ล็อกเวลาจะอยู่ที่เดิม</>
@@ -251,7 +261,7 @@ export default function Planner() {
             <div>
               <div className="mb-2 flex items-center justify-between">
                 <h2 className="text-xl text-ink">เส้นทางวันที่ {trip.activeDay + 1} <span className="font-sans text-sm text-muted">{fmtThaiDate(schedule?.days?.[trip.activeDay]?.date)}</span></h2>
-                {computing && <span className="text-xs text-muted">กำลังคำนวณเวลา…</span>}
+                {computing && <span className="soft-pulse text-xs font-medium text-forest">กำลังคำนวณเวลา…</span>}
               </div>
               <MapView className="h-80 sm:h-96" markers={markers} routes={routes} />
               <p className="mt-1 text-xs text-muted">เส้นประ = ค่าประมาณ (โหมดจำลอง), เส้นทึบ = เส้นทางจริงจากผู้ให้บริการแผนที่</p>
@@ -261,8 +271,8 @@ export default function Planner() {
               {schedule ? (
                 <>
                   <dl className="mt-3 grid grid-cols-2 gap-3 text-sm">
-                    <div className="rounded-xl bg-mist p-3"><dt className="text-muted">ระยะทางรวม</dt><dd className="font-display text-xl text-forest">{schedule.totals.distance_km} กม.</dd></div>
-                    <div className="rounded-xl bg-mist p-3"><dt className="text-muted">เวลาเดินทางรวม</dt><dd className="font-display text-xl text-forest">{fmtDuration(schedule.totals.travel_min)}</dd></div>
+                    <div className="rounded-xl bg-mist p-3"><dt className="text-muted">ระยะทางรวม</dt><dd className="font-display text-xl text-forest"><CountUp value={schedule.totals.distance_km} format={(v) => `${Math.round(v * 10) / 10} กม.`} duration={600} /></dd></div>
+                    <div className="rounded-xl bg-mist p-3"><dt className="text-muted">เวลาเดินทางรวม</dt><dd className="font-display text-xl text-forest"><CountUp value={schedule.totals.travel_min} format={(v) => fmtDuration(Math.round(v))} duration={600} /></dd></div>
                   </dl>
                   <p className="mt-4 text-sm font-semibold">การแจ้งเตือน</p>
                   {schedule.warnings.length === 0 ? (
@@ -272,7 +282,7 @@ export default function Planner() {
                       <p className="mt-1 text-sm text-muted">ปัญหา {counts.error}, ควรระวัง {counts.warning}, คำแนะนำ {counts.info}</p>
                       <ul className="mt-2 max-h-72 space-y-1.5 overflow-y-auto">
                         {schedule.warnings.map((w, i) => (
-                          <li key={i} className={`rounded-lg px-2.5 py-1.5 text-xs ${w.level === 'error' ? 'bg-alert-soft text-alert' : w.level === 'warning' ? 'bg-sun-soft text-[#6b4f0e]' : 'bg-mist text-muted'}`}>
+                          <li key={i} className={`fade-up rounded-lg px-2.5 py-1.5 text-xs ${w.level === 'error' ? 'bg-alert-soft text-alert' : w.level === 'warning' ? 'bg-sun-soft text-[#6b4f0e]' : 'bg-mist text-muted'}`}>
                             <b>วันที่ {w.day_index + 1}:</b> {w.message}
                           </li>
                         ))}

@@ -115,7 +115,7 @@ export default function Register() {
             </p>
           )}
 
-          <button disabled={busy} className="btn-primary w-full rounded-full py-3 text-[15px] font-medium disabled:opacity-50">
+          <button disabled={busy} aria-busy={busy || undefined} className="btn-primary w-full rounded-full py-3 text-[15px] font-medium disabled:opacity-50">
             {otpOn ? (busy ? 'กำลังส่งรหัส…' : 'รับรหัส OTP') : busy ? 'กำลังสร้างบัญชี…' : 'สมัครสมาชิก'}
           </button>
           <p className="text-center text-sm text-muted">

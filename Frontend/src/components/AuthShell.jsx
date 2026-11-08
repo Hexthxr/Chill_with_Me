@@ -1,15 +1,14 @@
 import { useEffect, useRef, useState } from 'react'
+import PlaceArt from './PlaceArt'
 
 /** Two-column auth layout: sky panel (desktop) + form card. */
 export function AuthShell({ title, subtitle, children }) {
   return (
     <div className="mx-auto grid max-w-5xl gap-0 px-4 py-10 sm:px-6 md:grid-cols-[1fr_1.1fr] md:py-16">
       <aside className="promo-sky relative hidden overflow-hidden rounded-l-[32px] p-10 text-white md:block">
-        <div className="absolute inset-0 bg-cover bg-center opacity-25 mix-blend-overlay" style={{ backgroundImage: 'url(/hero-sea.jpg)' }} aria-hidden="true" />
-        <svg viewBox="0 0 400 160" preserveAspectRatio="none" className="absolute bottom-0 left-0 h-32 w-full opacity-25" aria-hidden="true">
-          <path d="M0 90c50-25 100-25 150 0s100 25 150 0 70-20 100-10v80H0z" fill="#fff" />
-          <path d="M0 120c50-20 100-20 150 0s100 20 150 0 70-15 100-8v48H0z" fill="#fff" />
-        </svg>
+        <div className="absolute inset-x-0 bottom-0 h-56 [mask-image:linear-gradient(to_bottom,transparent,#000_45%)]">
+          <PlaceArt place={{ place_id: 'auth-seaside', ml: { top_interest: 'sea' } }} showLabel={false} usePhoto={false} live className="h-full w-full" />
+        </div>
         <div className="relative">
           <p className="text-lg font-semibold tracking-wide">CHILL WITH ME</p>
           <h2 className="mt-8 text-3xl leading-snug text-white">เที่ยวไทยแบบไม่ต้องเดา</h2>
@@ -25,7 +24,7 @@ export function AuthShell({ title, subtitle, children }) {
           </ul>
         </div>
       </aside>
-      <section className="card-sky rounded-[32px] p-6 ring-1 ring-forest/5 sm:p-10 md:rounded-l-none">
+      <section className="fade-up card-sky rounded-[32px] p-6 ring-1 ring-forest/5 sm:p-10 md:rounded-l-none">
         <h1 className="text-gradient-sky pb-1 text-3xl font-semibold">{title}</h1>
         {subtitle && <p className="mt-1 text-muted">{subtitle}</p>}
         <div className="mt-8">{children}</div>
@@ -98,7 +97,7 @@ export function OtpInput({ value, onChange, disabled, autoFocus = true, invalid,
           disabled={disabled}
           aria-label={`หลักที่ ${i + 1}`}
           className={`h-14 w-full min-w-0 rounded-xl border bg-white text-center text-2xl font-semibold text-ink outline-none transition focus:ring-4 focus:ring-leaf sm:h-16 ${
-            invalid ? 'border-alert' : d ? 'border-moss' : 'border-sand'
+            invalid ? 'border-alert' : d ? 'otp-filled border-moss' : 'border-sand'
           }`}
         />
       ))}
@@ -163,13 +162,21 @@ export function PasswordRules({ value }) {
     ['มีตัวอักษรภาษาอังกฤษ', /[A-Za-z]/.test(value)],
     ['มีตัวเลข', /\d/.test(value)],
   ]
+  const passed = rules.filter(([, ok]) => ok).length
   return (
-    <ul className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 text-xs">
-      {rules.map(([label, ok]) => (
-        <li key={label} className={ok ? 'text-forest' : 'text-muted'}>
-          <span aria-hidden="true">{ok ? '✓' : '○'}</span> {label}
-        </li>
-      ))}
-    </ul>
+    <>
+      <div className="mt-2 grid grid-cols-3 gap-1" aria-hidden="true">
+        {rules.map(([label], i) => (
+          <span key={label} className={`h-1 rounded-full transition-colors duration-300 ${i < passed ? (passed === 3 ? 'bg-[#3f9d7a]' : 'bg-sun') : 'bg-sand'}`} />
+        ))}
+      </div>
+      <ul className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 text-xs">
+        {rules.map(([label, ok]) => (
+          <li key={label} className={`transition-colors ${ok ? 'text-forest' : 'text-muted'}`}>
+            <span key={String(ok)} className={ok ? 'pop-in' : ''} aria-hidden="true">{ok ? '✓' : '○'}</span> {label}
+          </li>
+        ))}
+      </ul>
+    </>
   )
 }

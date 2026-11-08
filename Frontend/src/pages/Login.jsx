@@ -94,7 +94,7 @@ export default function Login() {
               )}
             </p>
           )}
-          <button disabled={busy} className="btn-primary w-full rounded-full py-3 text-[15px] font-medium disabled:opacity-50">
+          <button disabled={busy} aria-busy={busy || undefined} className="btn-primary w-full rounded-full py-3 text-[15px] font-medium disabled:opacity-50">
             {busy ? 'กำลังดำเนินการ…' : mode === 'password' ? 'เข้าสู่ระบบ' : 'รับรหัส OTP'}
           </button>
           <p className="text-center text-sm text-muted">

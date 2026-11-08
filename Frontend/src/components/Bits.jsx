@@ -41,8 +41,8 @@ export function InterestChips({ interests, selected, onToggle, size = 'md' }) {
             type="button"
             aria-pressed={on}
             onClick={() => onToggle(it.key)}
-            className={`rounded-full ${pad} font-medium transition-colors ${
-              on ? 'bg-forest text-white' : 'bg-white text-forest ring-1 ring-forest/20 hover:ring-forest/50'
+            className={`rounded-full ${pad} font-medium transition ${
+              on ? 'chip-on bg-forest text-white shadow-md shadow-forest/30' : 'bg-white text-forest ring-1 ring-forest/20 hover:-translate-y-0.5 hover:ring-forest/50 hover:shadow-sm'
             }`}
           >
             <span aria-hidden="true" className="mr-1">{it.emoji}</span>
@@ -90,8 +90,9 @@ export function Toasts() {
       {toasts.map((t) => (
         <div
           key={t.id}
-          className={`pointer-events-auto rounded-full px-5 py-2.5 text-sm shadow-lg ${t.tone === 'error' ? 'bg-alert text-white' : 'bg-forest-deep text-white'}`}
+          className={`fade-up pointer-events-auto flex items-center gap-2 rounded-full py-2.5 pl-3 pr-5 text-sm shadow-xl ${t.tone === 'error' ? 'bg-alert text-white' : 'bg-forest-deep text-white'}`}
         >
+          <span className="pop-in grid h-5 w-5 shrink-0 place-items-center rounded-full bg-white/20 text-xs font-bold" aria-hidden="true">{t.tone === 'error' ? '!' : '✓'}</span>
           {t.message}
         </div>
       ))}
@@ -99,12 +100,12 @@ export function Toasts() {
   )
 }
 
-export function Button({ variant = 'primary', className = '', ...props }) {
+export function Button({ variant = 'primary', loading = false, className = '', ...props }) {
   const v = {
     primary: 'btn-primary disabled:opacity-50',
-    ghost: 'bg-white text-forest ring-1 ring-forest/20 hover:ring-forest/50 disabled:opacity-50',
+    ghost: 'btn-ripple bg-white text-forest ring-1 ring-forest/20 hover:-translate-y-0.5 hover:shadow-md hover:ring-forest/50 disabled:opacity-50 disabled:hover:translate-y-0',
     sun: 'bg-sun text-ink hover:brightness-95 disabled:opacity-50',
-    danger: 'bg-white text-alert ring-1 ring-alert/30 hover:bg-alert-soft',
+    danger: 'btn-ripple bg-white text-alert ring-1 ring-alert/30 hover:bg-alert-soft',
   }[variant]
-  return <button className={`inline-flex items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition ${v} ${className}`} {...props} />
+  return <button aria-busy={loading || undefined} className={`inline-flex items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition ${v} ${className}`} {...props} />
 }
