@@ -9,5 +9,7 @@ scikit-learn>=1.5
 joblib>=1.4
 pythainlp>=5.0           # Thai word tokenisation for TF-IDF
 httpx>=0.27              # routing provider HTTP calls
+python-multipart>=0.0.9  # admin photo uploads
+Pillow>=10.3             # validates, resizes and strips metadata from uploaded photos
 pydantic>=2.7
 pytest>=8.0

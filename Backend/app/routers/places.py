@@ -10,7 +10,7 @@ from ml.aspects import ASPECTS
 from ..db import get_db
 from ..errors import APIError
 from ..serializers import CARD_PROJECTION, place_card, review_out
-from ..services import photos
+from ..services import photos, place_images
 from ..services.ml_service import ml_service
 
 router = APIRouter(prefix="/api/places", tags=["places"])
@@ -98,15 +98,27 @@ async def place_detail(place_id: str):
 async def place_photo(place_id: str):
     """A real photo with its credit, or {"photo": null} when none was found (the UI keeps its illustration)."""
     d = await get_db().places.find_one(
-        {"_id": place_id}, {"name": 1, "lat": 1, "lng": 1, "is_accommodation": 1, "is_food": 1, "hidden": 1}
+        {"_id": place_id}, {"name": 1, "lat": 1, "lng": 1, "is_accommodation": 1, "is_food": 1, "hidden": 1, "wiki_photo_off": 1}
     )
     if not d or d.get("hidden"):
         raise APIError(404, "not_found", "ไม่พบสถานที่นี้")
+    uploaded = await place_images.main_image(place_id)  # a photo chosen by an admin always comes first
+    if uploaded:
+        return {"photo": uploaded}
     try:
         return {"photo": await photos.photo_for(d)}
     except photos.PhotoLookupError as e:
         photos.log.warning("photo lookup failed for %s: %s", place_id, e)
         return {"photo": None}
+
+
+@router.get("/{place_id}/photos")
+async def place_photos(place_id: str):
+    """Every photo admins added, main one first (Wikipedia's single photo is only served by /photo)."""
+    d = await get_db().places.find_one({"_id": place_id}, {"hidden": 1})
+    if not d or d.get("hidden"):
+        raise APIError(404, "not_found", "ไม่พบสถานที่นี้")
+    return {"items": await place_images.public_images(place_id)}
 
 
 @router.get("/{place_id}/reviews")

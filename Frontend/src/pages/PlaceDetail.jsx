@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import { Rating, SentimentPill } from '../components/Bits'
 import MapView from '../components/MapView'
 import PlaceArt from '../components/PlaceArt'
+import PlaceGallery from '../components/PlaceGallery'
 import { CountUp, Reveal } from '../components/Motion'
 import { AddTripButton } from '../components/PlaceCard'
 import { EmptyState, ErrorState, Spinner } from '../components/States'
@@ -190,6 +191,7 @@ export default function PlaceDetail() {
 
       <div className="mx-auto mt-8 grid max-w-7xl gap-8 px-4 sm:px-6 lg:grid-cols-[1fr_380px]">
         <div className="space-y-8">
+          <PlaceGallery placeId={p.place_id} />
           <section className="rounded-3xl card-sky p-6 ring-1 ring-forest/5 sm:p-8">
             <h2 className="text-2xl text-ink">รีวิวพูดถึงอะไรบ้าง</h2>
             {!a.available ? (

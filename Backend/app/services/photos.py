@@ -173,6 +173,8 @@ async def fetch_wikipedia(name: str, lat: float, lng: float) -> dict | None:
 
 async def photo_for(place: dict) -> dict | None:
     """The cached or newly found photo of a place (a place doc with _id, name, lat, lng)."""
+    if place.get("wiki_photo_off"):  # an admin found this photo to be wrong
+        return None
     db = get_db()
     cached = await db.place_photos.find_one({"_id": place["_id"]})
     if cached:

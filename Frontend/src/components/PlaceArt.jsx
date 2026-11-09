@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { api } from '../lib/api'
+import { api, assetUrl } from '../lib/api'
 import { FAMILY_LABEL, familyOf } from '../lib/placeFamily'
 import { useInView } from './Motion'
 
@@ -357,6 +357,9 @@ function queuePhotoRequest(placeId) {
   })
 }
 
+/** After an admin changes a place's photos, the next card asks the server again. */
+export const forgetPlacePhoto = (placeId) => photoRequests.delete(placeId)
+
 /** The place's real photo once the card is on screen; several cards of one place share one request. */
 function usePlacePhoto(placeId, enabled) {
   const [ref, seen] = useInView()
@@ -379,7 +382,10 @@ function usePlacePhoto(placeId, enabled) {
   return [ref, photo]
 }
 
-const creditText = (p) => `ภาพ: ${p.author || 'ไม่ระบุผู้ถ่าย'} / ${p.license} ผ่าน Wikimedia Commons`
+function creditText(p) {
+  if (p.source === 'admin') return p.author ? `ภาพ: ${p.author}` : ''
+  return `ภาพ: ${p.author || 'ไม่ระบุผู้ถ่าย'} / ${p.license} ผ่าน Wikimedia Commons`
+}
 
 /** The illustration is the base layer; a real photo fades in over it when one exists and loads. */
 export default function PlaceArt({ place, className = '', showLabel = true, live = false, usePhoto = true, showCredit = false, w = 400, h = H }) {
@@ -389,7 +395,11 @@ export default function PlaceArt({ place, className = '', showLabel = true, live
   const scene = useMemo(() => buildScene(family, seed, W), [family, seed, W])
   const [ref, photo] = usePlacePhoto(place?.place_id, usePhoto)
   const [loadedUrl, setLoadedUrl] = useState(null)
-  const shown = photo && loadedUrl === photo.url
+  // banners are wide, so they get the large file; cards and thumbnails the small one
+  const src = photo && assetUrl(w > 600 ? photo.url : photo.thumb_url || photo.url)
+  const credit = photo ? creditText(photo) : ''
+  const creditLink = photo?.source_url || photo?.article_url
+  const shown = photo && loadedUrl === src
   return (
     <div ref={ref} className={`relative overflow-hidden ${live ? 'art-live' : ''} ${className}`} style={{ background: `linear-gradient(180deg, ${scene.sky[0]}, ${scene.sky[1]})` }}>
       <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMax slice" className="absolute inset-0 h-full w-full transition-transform duration-500 group-hover:scale-105" aria-hidden="true">
@@ -397,24 +407,26 @@ export default function PlaceArt({ place, className = '', showLabel = true, live
       </svg>
       {photo && (
         <img
-          src={photo.url}
+          src={src}
           alt={showCredit ? (place?.name || '') : ''}
-          title={creditText(photo)}
+          title={credit || undefined}
           referrerPolicy="no-referrer"
-          onLoad={() => setLoadedUrl(photo.url)}
+          onLoad={() => setLoadedUrl(src)}
           className={`absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105 ${shown ? 'opacity-100' : 'opacity-0'}`}
         />
       )}
-      {showCredit && shown && (
+      {showCredit && shown && credit && (creditLink ? (
         <a
-          href={photo.source_url || photo.article_url}
+          href={creditLink}
           target="_blank"
           rel="noreferrer"
           className="absolute right-2 top-2 max-w-[80%] truncate rounded-full bg-black/55 px-2.5 py-0.5 text-[11px] text-white hover:bg-black/70"
         >
-          {creditText(photo)}
+          {credit}
         </a>
-      )}
+      ) : (
+        <span className="absolute right-2 top-2 max-w-[80%] truncate rounded-full bg-black/55 px-2.5 py-0.5 text-[11px] text-white">{credit}</span>
+      ))}
       {showLabel && (
         <span className="absolute bottom-2 left-2 rounded-full bg-white/90 px-2.5 py-0.5 text-xs font-medium text-forest-deep shadow-sm">
           {place?.primary_type || FAMILY_LABEL[family]}

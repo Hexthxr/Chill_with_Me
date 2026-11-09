@@ -199,7 +199,7 @@ export default function Layout() {
             </nav>
           </div>
           <div className="border-t border-white/15">
-            <p className="mx-auto max-w-7xl px-4 py-4 text-xs text-white/70 sm:px-6">รูปถ่ายมาจาก Wikipedia และ Wikimedia Commons ตามสัญญาอนุญาตเสรี (ดูเครดิตได้ที่รูป) สถานที่ที่ไม่มีรูปจะแสดงภาพวาดที่สร้างขึ้น ไม่ใช่ภาพถ่ายจริง</p>
+            <p className="mx-auto max-w-7xl px-4 py-4 text-xs text-white/70 sm:px-6">รูปถ่ายมาจากผู้ดูแลระบบ หรือจาก Wikipedia และ Wikimedia Commons ตามสัญญาอนุญาตเสรี (ดูเครดิตได้ที่รูป) สถานที่ที่ไม่มีรูปจะแสดงภาพวาดที่สร้างขึ้น ไม่ใช่ภาพถ่ายจริง</p>
           </div>
         </div>
       </footer>
