@@ -5,7 +5,7 @@ from typing import Literal
 from fastapi import APIRouter, Query
 
 from ml.interests import INTERESTS
-from ml.recommender import DISTANCE_WEIGHT, WEIGHTS_INTEREST
+from ml.recommender import DISTANCE_WEIGHT, DISTANCE_WEIGHT_QUERY, WEIGHTS_INTEREST
 
 from ..db import get_db
 from ..errors import APIError
@@ -73,7 +73,7 @@ async def recommend(
         "explain": {
             "method": "Content-Based Filtering (TF-IDF profile ของสถานที่ + รีวิว) ร่วมกับคะแนนรีวิวและ Sentiment จาก ML",
             "weights": WEIGHTS_INTEREST,
-            "distance_weight": DISTANCE_WEIGHT if mode == "location" else None,
+            "distance_weight": (DISTANCE_WEIGHT_QUERY if ints or (q and q.strip()) else DISTANCE_WEIGHT) if mode == "location" else None,
             "distance_note": "ระยะทางในหน้านี้เป็นระยะเส้นตรง (ใช้สำหรับจัดอันดับ) — เวลาเดินทางจริงคำนวณใน Trip Planner",
         },
     }

@@ -6,6 +6,8 @@ content model – scores are computed from the data, not hard-coded per place.
 """
 from __future__ import annotations
 
+import re
+
 INTERESTS: dict[str, dict] = {
     "sea": {
         "label": "ทะเล",
@@ -72,10 +74,56 @@ INTERESTS: dict[str, dict] = {
 }
 
 
+# What a place must be to count as an interest at all. Only its type and name are trusted: a review that
+# mentions "sunset" or "cafe" does not make a temple or a tower a sea or cafe place.
+# Most places have the generic type "สถานที่ท่องเที่ยว" (and none has a beach type), so names carry most matches.
+_COASTAL_PROVINCES = frozenset(
+    "ตราด จันทบุรี ระยอง ชลบุรี ฉะเชิงเทรา สมุทรปราการ กรุงเทพมหานคร สมุทรสาคร สมุทรสงคราม เพชรบุรี ประจวบคีรีขันธ์ "
+    "ชุมพร สุราษฎร์ธานี นครศรีธรรมราช สงขลา ปัตตานี นราธิวาส ระนอง พังงา ภูเก็ต กระบี่ ตรัง สตูล".split()
+)
+_NOT_AN_ATTRACTION = r"^ป้าย|welcome sign|^ร้าน|^ตำบล|^หมู่บ้าน"
+_MATCH_RULES: dict[str, dict] = {
+    "sea": {
+        "name": r"หาด|ทะเล|เกาะ|อ่าว|แหลม|ปะการัง|ดำน้ำ|beach|island|coral|snorkel|\bkoh?\b|\bbay\b",
+        # หาดใหญ่ is a city; the others are lakes, seafood and fog ("sea of mist")
+        "exclude": r"หาดใหญ่|ทะเลสาบ|ทะเลหมอก|ทะเลบัว|ทะเลน้ำจืด|ทะเลทราย|ปูทะเล|อาหารทะเล|^วัด",
+        "provinces": _COASTAL_PROVINCES,
+    },
+    "mountain": {
+        "name": r"ภูเขา|ยอดเขา|ดอย|เขา|ภู(?!เก็ต|มิ|ษิต|ริ|พาน)|ผา|(?<!ห)ม่อน|จุดชมวิว|กางเต็นท์|กางเต๊นท์|แคมป์"
+                r"|mountain|viewpoint|hiking|trekking|camping|\bdoi\b|\bpeak\b",
+        "exclude": r"ทะเล|หาด|เกาะ|beach|island|แม่น้ำ|^น้ำตก|^ถ้ำ|^อ่าง|^วัด|^สวน",
+    },
+    "nature": {
+        "name": r"ธรรมชาติ|น้ำตก|ถ้ำ|อุทยาน|ป่า|ลำธาร|บึง|สวนพฤกษ|ทุ่ง(?:ดอก|นา|หญ้า|ปอ|บัว|ทาน|กังหัน|สะวัน)"
+                r"|waterfall|forest|\bcave\b|national park|nature",
+        "exclude": r"^วัด|ป่าตอง|พุทธอุทยาน|อุทยานประวัติศาสตร์",
+    },
+    "cafe": {"name": r"คาเฟ่|กาแฟ|เบเกอรี่|cafe|café|coffee|bakery"},
+    "culture": {
+        "name": r"(?<!จัง)วัด|พิพิธภัณฑ์|เมืองโบราณ|โบราณสถาน|โบราณคดี|ศาลเจ้า|เจดีย์|พระธาตุ|วิหาร|โบสถ์|มัสยิด|อนุสาวรีย์"
+                r"|พระราชวัง|อุทยานประวัติศาสตร์|หอศิลป์|temple|museum|gallery|\bwat\b",
+        "exclude": r"^ตลาด|^สวน",
+    },
+    "family": {
+        "name": r"สวนสัตว์|สวนน้ำ|สวนสนุก|ฟาร์ม|พิพิธภัณฑ์สัตว์น้ำ|\bzoo\b|\bfarm\b|water ?park|amusement|aquarium",
+        "exclude": r"ไก่ชน",
+    },
+}
+_NAME_RE = {k: re.compile(r["name"], re.I) for k, r in _MATCH_RULES.items()}
+_EXCLUDE_RE = {k: re.compile("|".join(filter(None, [_NOT_AN_ATTRACTION, r.get("exclude")])), re.I) for k, r in _MATCH_RULES.items()}
+
+
 def all_seed_keywords() -> set[str]:
     return {k for spec in INTERESTS.values() for k in spec["keywords"]}
 
 
-def interest_type_match(interest: str, primary_type: str | None, types: list[str]) -> bool:
-    spec = INTERESTS[interest]
-    return bool((primary_type and primary_type in spec["primary_types"]) or (set(types) & spec["types"]))
+def interest_match(interest: str, name: str | None, province: str | None, primary_type: str | None, types: list[str]) -> bool:
+    """True if this place really is the kind of place the interest asks for."""
+    spec, rules = INTERESTS[interest], _MATCH_RULES[interest]
+    name = name or ""
+    if _EXCLUDE_RE[interest].search(name):
+        return False
+    if "provinces" in rules and province not in rules["provinces"]:
+        return False
+    return bool(primary_type in spec["primary_types"] or set(types) & spec["types"] or _NAME_RE[interest].search(name))
