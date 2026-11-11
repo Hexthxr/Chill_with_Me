@@ -2,6 +2,9 @@ import { useAuth } from '../store/authStore'
 
 const BASE = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '')
 
+/** Uploaded photos come back as server paths; Wikipedia photos are already full URLs. */
+export const assetUrl = (path) => (path?.startsWith('/') ? `${BASE}${path}` : path)
+
 export class ApiError extends Error {
   constructor(status, code, message, details) {
     super(message)

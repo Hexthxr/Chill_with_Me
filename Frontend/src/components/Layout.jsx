@@ -8,20 +8,8 @@ import NotificationBell from './NotificationBell'
 
 function Logo() {
   return (
-    <Link to="/" className="flex items-center gap-2" aria-label="Chill with me หน้าแรก">
-      <svg viewBox="0 0 40 40" className="h-8 w-8" aria-hidden="true">
-        <defs>
-          <linearGradient id="logo-g" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stopColor="#2a9db5" />
-            <stop offset="1" stopColor="#0b5568" />
-          </linearGradient>
-        </defs>
-        <rect width="40" height="40" rx="12" fill="url(#logo-g)" />
-        <path d="M7 24c4-3 7-3 10 0s6 3 9 0 6-3 7-1" fill="none" stroke="#fff" strokeWidth="2.6" strokeLinecap="round" />
-        <path d="M7 30c4-3 7-3 10 0s6 3 9 0 6-3 7-1" fill="none" stroke="#a9dfe0" strokeWidth="2.2" strokeLinecap="round" />
-        <circle cx="27" cy="13" r="4.5" fill="#ffc56b" />
-      </svg>
-      <span className="text-gradient-sky text-lg font-semibold tracking-wide">CHILL WITH ME</span>
+    <Link to="/" className="brand-symbol" aria-label="Chill with me หน้าแรก">
+      <img src="/chill-symbol.png" alt="Chill with me" width="1024" height="1024" />
     </Link>
   )
 }
@@ -132,8 +120,8 @@ export default function Layout() {
       <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-2 focus:z-50 focus:rounded focus:bg-white focus:px-3 focus:py-1">
         ข้ามไปเนื้อหา
       </a>
-      <header className={`sticky top-0 z-[1000] border-b backdrop-blur-md transition-shadow duration-300 print:hidden ${scrolled ? 'border-forest/10 bg-white/95 shadow-[0_8px_24px_-16px_rgba(11,85,104,0.5)]' : 'border-transparent bg-white/85'}`}>
-        <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6">
+      <header className={`site-header sticky top-0 z-[1000] border-b backdrop-blur-md transition-shadow duration-300 print:hidden ${scrolled ? 'border-forest/10 bg-white/95 shadow-[0_8px_24px_-16px_rgba(11,85,104,0.5)]' : 'border-transparent bg-white/85'}`}>
+        <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6">
           <Logo />
           <div className="flex items-center gap-1">
           <nav className="hidden items-center gap-1 lg:flex" aria-label="เมนูหลัก">
@@ -179,7 +167,7 @@ export default function Layout() {
       <main id="main" ref={main} className="flex-1">
         <Outlet />
       </main>
-      <footer className="mt-20 print:hidden">
+      <footer className="site-footer mt-20 print:hidden">
         <FooterWave />
         <div className="bg-forest-deep text-white">
           <div className="mx-auto grid max-w-7xl gap-6 px-4 py-10 sm:grid-cols-[1.4fr_1fr] sm:px-6">
@@ -199,7 +187,7 @@ export default function Layout() {
             </nav>
           </div>
           <div className="border-t border-white/15">
-            <p className="mx-auto max-w-7xl px-4 py-4 text-xs text-white/70 sm:px-6">รูปถ่ายมาจาก Wikipedia และ Wikimedia Commons ตามสัญญาอนุญาตเสรี (ดูเครดิตได้ที่รูป) สถานที่ที่ไม่มีรูปจะแสดงภาพวาดที่สร้างขึ้น ไม่ใช่ภาพถ่ายจริง</p>
+            <p className="mx-auto max-w-7xl px-4 py-4 text-xs text-white/70 sm:px-6">รูปถ่ายมาจากผู้ดูแลระบบ หรือจาก Wikipedia และ Wikimedia Commons ตามสัญญาอนุญาตเสรี (ดูเครดิตได้ที่รูป) สถานที่ที่ไม่มีรูปจะแสดงภาพวาดที่สร้างขึ้น ไม่ใช่ภาพถ่ายจริง</p>
           </div>
         </div>
       </footer>

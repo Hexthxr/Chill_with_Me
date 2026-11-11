@@ -1,0 +1,92 @@
+[
+  {
+    "place_id": "ChIJPzZsMU6Z4jARQUzvk913bCo",
+    "source": "curated",
+    "url": "/place-photos/grand-palace.jpg",
+    "title": "Grand Palace",
+    "author": "Civitatis",
+    "source_url": "https://www.civitatis.com/en/bangkok/bangkok-tour-cruise-passengers/",
+    "original_url": "https://www.civitatis.com/f/tailandia/bangkok/galeria/vista-fachada-gran-palacio-bangkok.jpg",
+    "provider": "Civitatis"
+  },
+  {
+    "place_id": "ChIJGzV2mdKY4jARdIb62T7BoE4",
+    "source": "curated",
+    "url": "/place-photos/mahanakhon.jpg",
+    "title": "King Power Mahanakhon",
+    "author": "MyGuide Bangkok",
+    "provider": "MyGuide Bangkok",
+    "source_url": "https://www.myguidebangkok.com/experiences/bangkok-mahanakhon-skywalk-observation-deck-entry-ticket",
+    "original_url": "https://images.myguide-cdn.com/bangkok/companies/bangkok-mahanakhon-skywalk-observation-deck-entry-ticket/large/bangkok-mahanakhon-skywalk-observation-deck-entry-ticket-6112519.jpg"
+  },
+  {
+    "place_id": "ChIJ-UkaTEl04jAR2QgEGFAM1dU",
+    "source": "curated",
+    "url": "/place-photos/wat-mahathat.jpg",
+    "title": "Wat Mahathat, Ayutthaya",
+    "author": "Gerry Gantt",
+    "source_url": "https://www.gerryganttphotography.com/wat_mahathat.htm",
+    "original_url": "https://www.gerryganttphotography.com/images/ayutthaya/DTHA0225WatMahathat.jpg",
+    "provider": "Gerry Gantt"
+  },
+  {
+    "place_id": "ChIJD69jU_lHUDAR1J7F_gX4Tu0",
+    "source": "curated",
+    "url": "/place-photos/phuket-elephant-care.jpg",
+    "title": "Phuket Elephant Care",
+    "author": "Phuket Elephant Care",
+    "source_url": "https://phuketelephant.care/",
+    "original_url": "https://lh3.googleusercontent.com/pw/AP1GczPDEKfNZnj1mNuVoFL2ZloOVzoHkc6eROKpK2-MeX4h7TEUR_vvNOEAWsqfua6g8HPXt9yyrEBdHQSbJI9P9c934OAB_stET9sscBqDmk7C9Hr4-WgFF6aaHFSmkgSnXxs5NtlSTmvPFAFp3M3ehrBNSw=s1600",
+    "provider": "Phuket Elephant Care"
+  },
+  {
+    "place_id": "ChIJp-qLmcCZ4jARYoCSpq8q75M",
+    "source": "curated",
+    "url": "/place-photos/living-green-bangkok.jpg",
+    "title": "Living Green Elephant Sanctuary, Bangkok program",
+    "author": "Living Green / GetYourGuide",
+    "source_url": "https://www.getyourguide.com/bangkok-l169/from-bangkok-living-green-elephant-sanctuary-day-trip-t913927/",
+    "original_url": "https://cdn.getyourguide.com/image/format%3Dauto%2Cfit%3Dcrop%2Cgravity%3Dauto%2Cquality%3D60%2Cwidth%3D450%2Cheight%3D450%2Cdpr%3D2/tour_img/d4bdc12620b358257f1b41bee2963106f80b0dbb4548a5d79cedb38654f7f7a3.jpg",
+    "provider": "Living Green / GetYourGuide"
+  },
+  {
+    "place_id": "ChIJpfUnQQSJ2TARrKLsGWs5Jyw",
+    "source": "curated",
+    "url": "/place-photos/passa-tea-plantation.jpg",
+    "title": "PASSA Tea Plantation at Mae On",
+    "author": "TripNiceDay / สดชื่น กัญชนะ",
+    "source_url": "https://www.tripniceday.com/en/place/passa-tea-plantation-%F0%9F%8D%B5%F0%9F%8C%B1",
+    "original_url": "https://storage.googleapis.com/tripniceday/uploads/places/1712028765713.jpg",
+    "provider": "TripNiceDay / สดชื่น กัญชนะ"
+  },
+  {
+    "place_id": "ChIJR5MWGtEA2zAR7s6CkejxlG4",
+    "source": "curated",
+    "url": "/place-photos/baan-rabiang-na.jpg",
+    "title": "Baan Rabiang Na, Pa Bong Piang",
+    "author": "Thai-tour",
+    "source_url": "https://www.thai-tour.com/place/3976",
+    "original_url": "https://www.thai-tour.com/include/p_img/6/39/tt59c0c442a08cb.jpg",
+    "provider": "Thai-tour"
+  },
+  {
+    "place_id": "ChIJFd2v-Ncw2jAR1e8D9NDKuIw",
+    "source": "curated",
+    "url": "/place-photos/the-camp-muay-thai.webp",
+    "title": "The Camp Muay Thai Resort and Academy",
+    "author": "The Camp",
+    "source_url": "https://www.thecamp-chiangmai.com/",
+    "original_url": "https://cdn.prod.website-files.com/6a7c6f99132faebf9cb78772/6aa224f7bf25bebb6e5996fd_Gym%20%26%20Hotel.webp",
+    "provider": "The Camp"
+  },
+  {
+    "place_id": "ChIJiXGB-sJz2jARt6J8arpB3Gs",
+    "source": "curated",
+    "url": "/place-photos/phu-saimork-villa.jpg",
+    "title": "Phu Saimork Villa",
+    "author": "Phu Saimork Villa / Trip.com",
+    "source_url": "https://ca.trip.com/hotels/mae-taeng-hotel-detail-133718582/phusaimorkvilla/",
+    "original_url": "https://ak-d.tripcdn.com/images/1z61m12000rk308l6AD8B_R_960_660_R5_D.jpg",
+    "provider": "Phu Saimork Villa / Trip.com"
+  }
+]

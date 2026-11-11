@@ -10,15 +10,15 @@
   --font-display: "Anuphan", "Noto Sans Thai", system-ui, sans-serif;
   --font-sans: "Anuphan", "Noto Sans Thai", system-ui, sans-serif;
 
-  --color-forest: #0e7490;       /* brand primary: lagoon teal */
-  --color-forest-deep: #0b5568;  /* primary dark: deep water */
-  --color-moss: #2a9db5;         /* secondary teal (decoration, focus) */
-  --color-leaf: #cfeef2;         /* light teal fill */
-  --color-mist: #e9f6f6;         /* very light teal surface */
-  --color-cream: #fbf8f1;        /* page background: warm sand */
-  --color-sand: #ece4d3;         /* warm surface / borders */
-  --color-ink: #17343d;          /* deep sea-green text */
-  --color-muted: #5a6e74;
+  --color-forest: #29546a;       /* brand primary: lagoon teal */
+  --color-forest-deep: #244457;  /* primary dark: deep water */
+  --color-moss: #4f8d99;         /* secondary teal (decoration, focus) */
+  --color-leaf: #e0eff1;         /* light teal fill */
+  --color-mist: #f1f7f8;         /* very light teal surface */
+  --color-cream: #ffffff;        /* page background: warm sand */
+  --color-sand: #e1e7eb;         /* warm surface / borders */
+  --color-ink: #233f50;          /* deep sea-green text */
+  --color-muted: #617581;
   --color-sky: #4cc9d6;          /* bright accent */
   --color-coral: #e2683f;        /* sunset accent (decoration, markers) */
   --color-coral-soft: #fdeadf;
@@ -252,3 +252,46 @@ h1.text-gradient-sky::after { margin-top: 0.4rem; }
   *, *::before, *::after { animation: none !important; transition: none !important; }
   .reveal { opacity: 1 !important; transform: none !important; }
 }
+
+/* White coastal travel identity; all existing interactions remain intact. */
+body { background: #fff; }
+.site-header { background: #fff; border-bottom: 1px solid #e5ecef; backdrop-filter: none; }
+.brand-symbol { display: flex; align-items: center; flex-shrink: 0; width: 76px; height: 76px; }
+.brand-symbol img { display: block; width: 100%; height: 100%; object-fit: contain; }
+.site-header .nav-link { border-radius: 9px; }
+.site-header .nav-link::after { background: #7caeb7; }
+.home-hero { margin: 18px auto 0; max-width: 1400px; border-radius: 22px; background: #244457; }
+.home-hero > .bg-gradient-to-b { background-image: linear-gradient(180deg,rgba(22,50,69,.65),rgba(22,50,69,.2) 70%,transparent); }
+.home-hero h1 { letter-spacing: -.025em; }
+.home-search { z-index: 2; }
+.home-search [role="tablist"] { background: #fff; box-shadow: 0 -3px 18px #24445712; border: 1px solid #e7ecef; border-bottom: 0; }
+.search-panel { background: #fff; border-radius: 18px; box-shadow: 0 14px 40px -15px #24445740; outline: 1px solid #e1e8ed; }
+.search-panel input:not([type="date"]):not([type="checkbox"]) { background: #fbfcfd; border-color: #dce4e9; min-height: 56px; }
+.search-panel button.btn-primary { border-radius: 10px; max-width: 440px; min-height: 48px; }
+.btn-primary { background: #29546a; box-shadow: 0 5px 14px -8px #24445788; }
+.btn-primary:hover:not(:disabled) { background: #244457; }
+.text-gradient-sky { background: none; color: #244457; }
+.card-sky { background: #fff; box-shadow: 0 4px 18px -12px #24445740; }
+.destination-card { border-radius: 15px; outline: 1px solid #e4eaee; }
+.destination-card:hover { box-shadow: 0 14px 28px -16px #24445766; }
+.destination-card h3 { font-size: 17px; }
+.band-sky { background: #fff; }
+.promo-sky { background: linear-gradient(120deg,#244457,#3c7889); }
+.site-footer > svg { color: #244457; }
+.site-footer > .bg-forest-deep { background: #244457; }
+@media (min-width: 768px) { .search-panel { padding: 30px 36px 25px; } }
+@media (max-width: 1450px) { .home-hero { margin-left: 16px; margin-right: 16px; } }
+@media (max-width: 640px) {
+  .brand-symbol { width: 64px; height: 64px; }
+  .home-hero { margin: 10px 10px 0; border-radius: 15px; }
+  .home-hero h1 { font-size: 29px; }
+  .search-panel { border-radius: 14px; }
+}
+
+/* Category photography atlas: six equal cells, with the original search links. */
+.interest-photo { display: block; background-image: url('/travel-interest-atlas.png'); background-size: 300% 200%; background-repeat: no-repeat; transition: transform .45s ease; }
+.interest-tile { background: #e5eff0; }
+.interest-tile:hover .interest-photo { transform: scale(1.045); }
+.interest-tile:focus-visible { outline: 3px solid #4f8d99; outline-offset: 4px; }
+.interest-tile > span:last-child { padding-top: 44px; padding-bottom: 14px; background-image: linear-gradient(transparent,rgba(15,39,49,.85)); text-shadow: 0 1px 3px #0004; }
+@media (prefers-reduced-motion: reduce) { .interest-tile:hover .interest-photo { transform: none; } }

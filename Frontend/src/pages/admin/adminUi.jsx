@@ -16,9 +16,23 @@ export const FIELD_LABELS = {
   is_food: 'เป็นร้านอาหาร',
   hidden: 'ซ่อนจากผู้ใช้',
   hidden_reason: 'เหตุผลที่ซ่อน',
+  image: 'รูปภาพ',
+  caption: 'คำบรรยายรูป',
+  credit: 'เครดิตรูป',
 }
 
-export const ACTION_LABELS = { edit: 'แก้ไข', hide: 'ซ่อน', unhide: 'เลิกซ่อน' }
+export const ACTION_LABELS = {
+  edit: 'แก้ไข',
+  hide: 'ซ่อน',
+  unhide: 'เลิกซ่อน',
+  image_add: 'เพิ่มรูป',
+  image_edit: 'แก้ข้อความรูป',
+  image_replace: 'เปลี่ยนรูป',
+  image_remove: 'ลบรูป',
+  image_order: 'จัดลำดับรูป',
+  wiki_off: 'ปิดรูป Wikipedia',
+  wiki_on: 'เปิดรูป Wikipedia',
+}
 
 export const fmtDateTime = (iso) =>
   iso ? new Date(iso).toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' }) : '–'

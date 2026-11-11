@@ -4,6 +4,7 @@ import { ErrorState, Spinner } from '../../components/States'
 import { api } from '../../lib/api'
 import { fmtInt, fmtPct, fmtRating } from '../../lib/format'
 import { useToast } from '../../store/tripStore'
+import AdminImages from './AdminImages'
 import { ACTION_LABELS, AdminShell, FIELD_LABELS, fmtDateTime, fmtValue } from './adminUi'
 
 const TEXT_FIELDS = ['name', 'address', 'district', 'google_maps_url']
@@ -48,6 +49,8 @@ export default function AdminPlaceEdit() {
     }).catch((error) => setState({ error }))
   }
   useEffect(load, [id]) // eslint-disable-line react-hooks/exhaustive-deps
+  // photo changes only need the history updated; a full load would throw away unsaved form edits
+  const refreshHistory = () => api.admin.place(id).then((data) => setState({ data })).catch(() => {})
   useEffect(() => { api.admin.options().then(setOptions).catch(() => {}) }, [])
 
   const d = state.data
@@ -99,6 +102,8 @@ export default function AdminPlaceEdit() {
       {state.loading && <Spinner />}
       {state.error && <ErrorState error={state.error} onRetry={load} />}
       {d && form && (
+        <>
+        <AdminImages placeId={d.place_id} onChanged={refreshHistory} />
         <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
           <form onSubmit={save} className="space-y-4 rounded-2xl bg-white p-5 ring-1 ring-forest/10">
             <h2 className="font-medium text-ink">ข้อมูลที่แก้ไขได้</h2>
@@ -186,7 +191,7 @@ export default function AdminPlaceEdit() {
                 <ul className="mt-2 space-y-3">
                   {d.history.map((h, i) => (
                     <li key={i}>
-                      <p className="text-xs text-muted">{ACTION_LABELS[h.action]} · {h.admin_name} · {fmtDateTime(h.ts)}</p>
+                      <p className="text-xs text-muted">{ACTION_LABELS[h.action] || h.action} · {h.admin_name} · {fmtDateTime(h.ts)}</p>
                       <ul className="mt-0.5">
                         {Object.entries(h.changes).map(([k, c]) => (
                           <li key={k} className="break-words"><b className="font-medium">{FIELD_LABELS[k] || k}:</b> <span className="text-muted line-through">{fmtValue(c.old)}</span> → {fmtValue(c.new)}</li>
@@ -200,6 +205,7 @@ export default function AdminPlaceEdit() {
             </section>
           </aside>
         </div>
+        </>
       )}
     </AdminShell>
   )
