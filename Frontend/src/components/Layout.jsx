@@ -9,7 +9,8 @@ import NotificationBell from './NotificationBell'
 function Logo() {
   return (
     <Link to="/" className="brand-symbol" aria-label="Chill with me หน้าแรก">
-      <img src="/chill-symbol.png" alt="Chill with me" width="1024" height="1024" />
+      <img src="/chill-symbol.png" alt="" width="1024" height="1024" />
+      <span className="brand-wordmark">Chill with me</span>
     </Link>
   )
 }

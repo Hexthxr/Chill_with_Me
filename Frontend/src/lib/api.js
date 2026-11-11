@@ -27,14 +27,15 @@ async function request(path, { method = 'GET', body, params, signal } = {}) {
   let res
   try {
     const headers = {}
-    if (body) headers['Content-Type'] = 'application/json'
+    const isForm = body instanceof FormData // the browser sets the multipart header itself
+    if (body && !isForm) headers['Content-Type'] = 'application/json'
     const token = useAuth.getState().token
     if (token) headers.Authorization = `Bearer ${token}`
     res = await fetch(url, {
       method,
       signal,
       headers,
-      body: body ? JSON.stringify(body) : undefined,
+      body: isForm ? body : body ? JSON.stringify(body) : undefined,
     })
   } catch (e) {
     if (e.name === 'AbortError') throw e
@@ -56,6 +57,12 @@ async function request(path, { method = 'GET', body, params, signal } = {}) {
 }
 
 const recentSignals = new Map()
+
+function imageForm(file) {
+  const form = new FormData()
+  form.append('file', file)
+  return form
+}
 
 export const api = {
   authConfig: () => request('/api/auth/config'),
@@ -92,6 +99,7 @@ export const api = {
   placeReviews: (id, params) => request(`/api/places/${encodeURIComponent(id)}/reviews`, { params }),
   similar: (id) => request(`/api/places/${encodeURIComponent(id)}/similar`),
   placePhoto: (id) => request(`/api/places/${encodeURIComponent(id)}/photo`),
+  placePhotos: (id) => request(`/api/places/${encodeURIComponent(id)}/photos`),
   hotelsNear: (params) => request('/api/hotels/near', { params }),
   hotelsAlongRoute: (body) => request('/api/hotels/along-route', { method: 'POST', body }),
   hotelCoverage: () => request('/api/hotels/coverage'),
@@ -112,5 +120,13 @@ export const api = {
     place: (id) => request(`/api/admin/places/${encodeURIComponent(id)}`),
     updatePlace: (id, body) => request(`/api/admin/places/${encodeURIComponent(id)}`, { method: 'PATCH', body }),
     audit: (params) => request('/api/admin/audit', { params }),
+    images: (id) => request(`/api/admin/places/${encodeURIComponent(id)}/images`),
+    uploadImage: (id, file) => request(`/api/admin/places/${encodeURIComponent(id)}/images`, { method: 'POST', body: imageForm(file) }),
+    orderImages: (id, ids) => request(`/api/admin/places/${encodeURIComponent(id)}/images/order`, { method: 'PUT', body: { ids } }),
+    wikiPhoto: (id) => request(`/api/admin/places/${encodeURIComponent(id)}/wiki-photo`),
+    setWikiPhoto: (id, disabled) => request(`/api/admin/places/${encodeURIComponent(id)}/wiki-photo`, { method: 'PATCH', body: { disabled } }),
+    updateImage: (imageId, body) => request(`/api/admin/images/${imageId}`, { method: 'PATCH', body }),
+    replaceImage: (imageId, file) => request(`/api/admin/images/${imageId}/file`, { method: 'PUT', body: imageForm(file) }),
+    deleteImage: (imageId) => request(`/api/admin/images/${imageId}`, { method: 'DELETE' }),
   },
 }

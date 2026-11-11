@@ -256,8 +256,9 @@ h1.text-gradient-sky::after { margin-top: 0.4rem; }
 /* White coastal travel identity; all existing interactions remain intact. */
 body { background: #fff; }
 .site-header { background: #fff; border-bottom: 1px solid #e5ecef; backdrop-filter: none; }
-.brand-symbol { display: flex; align-items: center; flex-shrink: 0; width: 76px; height: 76px; }
-.brand-symbol img { display: block; width: 100%; height: 100%; object-fit: contain; }
+.brand-symbol { display: flex; align-items: center; flex-shrink: 0; gap: 10px; width: auto; height: 76px; }
+.brand-symbol img { display: block; width: 76px; height: 76px; flex-shrink: 0; object-fit: contain; }
+.brand-wordmark { white-space: nowrap; font-size: 22px; font-weight: 600; letter-spacing: -.025em; color: #244457; }
 .site-header .nav-link { border-radius: 9px; }
 .site-header .nav-link::after { background: #7caeb7; }
 .home-hero { margin: 18px auto 0; max-width: 1400px; border-radius: 22px; background: #244457; }
@@ -282,7 +283,9 @@ body { background: #fff; }
 @media (min-width: 768px) { .search-panel { padding: 30px 36px 25px; } }
 @media (max-width: 1450px) { .home-hero { margin-left: 16px; margin-right: 16px; } }
 @media (max-width: 640px) {
-  .brand-symbol { width: 64px; height: 64px; }
+  .brand-symbol { gap: 6px; height: 64px; }
+  .brand-symbol img { width: 64px; height: 64px; }
+  .brand-wordmark { font-size: 18px; }
   .home-hero { margin: 10px 10px 0; border-radius: 15px; }
   .home-hero h1 { font-size: 29px; }
   .search-panel { border-radius: 14px; }
@@ -295,3 +298,10 @@ body { background: #fff; }
 .interest-tile:focus-visible { outline: 3px solid #4f8d99; outline-offset: 4px; }
 .interest-tile > span:last-child { padding-top: 44px; padding-bottom: 14px; background-image: linear-gradient(transparent,rgba(15,39,49,.85)); text-shadow: 0 1px 3px #0004; }
 @media (prefers-reduced-motion: reduce) { .interest-tile:hover .interest-photo { transform: none; } }
+
+/* Compact planner workspace: the day card fills its column, without a blank rail. */
+.planner-add-panel [role="tablist"] { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; overflow: visible; }
+.planner-add-panel [role="tab"] { min-width: 0; text-align: center; }
+@media (min-width: 1280px) {
+  .planner-day-list > section { width: 100%; }
+}

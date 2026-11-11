@@ -244,26 +244,27 @@ export default function Planner() {
         </div>
       )}
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-[340px_1fr]">
-        <aside className="lg:sticky lg:top-20 lg:self-start"><AddPanel /></aside>
+      <div className="mt-5 grid items-start gap-4 lg:grid-cols-[320px_minmax(0,1fr)] xl:grid-cols-[320px_360px_minmax(0,1fr)]">
+        <aside className="planner-add-panel min-w-0 lg:sticky lg:top-24 lg:self-start"><AddPanel /></aside>
 
         <div className="min-w-0 space-y-6">
           <DndContext sensors={sensors} collisionDetection={closestCorners} onDragStart={({ active }) => setDragId(active.id)} onDragOver={onDragOver} onDragEnd={onDragEnd} onDragCancel={() => setDragId(null)}>
-            <div className="flex flex-col gap-4 md:flex-row md:overflow-x-auto md:pb-3">
+            <div className="planner-day-list flex flex-col gap-4 md:flex-row md:overflow-x-auto md:pb-3">
               {trip.days.map((d, i) => (
                 <DayColumn key={i} index={i} day={d} computedDay={schedule?.days?.[i]} onOptimize={optimize} optimizing={optimizing === i} />
               ))}
             </div>
             <DragOverlay>{dragBlock ? <BlockItem block={dragBlock} overlay computed={null} /> : null}</DragOverlay>
           </DndContext>
+        </div>
 
-          <div className="grid gap-6 xl:grid-cols-[1fr_360px]">
-            <div>
-              <div className="mb-2 flex items-center justify-between">
+        <aside className="min-w-0 space-y-4 lg:col-start-2 xl:sticky xl:top-24 xl:col-start-auto xl:self-start" aria-label="แผนที่และสรุปทริป">
+            <div className="rounded-3xl bg-white p-4 ring-1 ring-forest/10">
+              <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                 <h2 className="text-xl text-ink">เส้นทางวันที่ {trip.activeDay + 1} <span className="font-sans text-sm text-muted">{fmtThaiDate(schedule?.days?.[trip.activeDay]?.date)}</span></h2>
                 {computing && <span className="soft-pulse text-xs font-medium text-forest">กำลังคำนวณเวลา…</span>}
               </div>
-              <MapView className="h-80 sm:h-96" markers={markers} routes={routes} />
+              <MapView className="h-80 sm:h-96 xl:h-[360px]" markers={markers} routes={routes} />
               <p className="mt-1 text-xs text-muted">เส้นประ = ค่าประมาณ (โหมดจำลอง), เส้นทึบ = เส้นทางจริงจากผู้ให้บริการแผนที่</p>
             </div>
             <div className="rounded-3xl card-sky p-5 ring-1 ring-forest/5">
@@ -294,8 +295,7 @@ export default function Planner() {
                 <div className="mt-3"><Spinner label="กำลังคำนวณ…" /></div>
               )}
             </div>
-          </div>
-        </div>
+        </aside>
       </div>
     </div>
   )
