@@ -9,14 +9,16 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from . import db as dbmod
 from . import errors
 from .config import settings
-from .routers import activity, admin, auth, hotels, meta, notifications, places, planner, recommend, trips
+from .routers import activity, admin, admin_images, auth, hotels, meta, notifications, places, planner, recommend, trips
 from .services.auth import ensure_indexes as ensure_auth_indexes
 from .services.ml_service import ml_service
 from .services.photos import ensure_indexes as ensure_photo_indexes
+from .services.place_images import ensure_indexes as ensure_image_indexes
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 log = logging.getLogger("chill")
@@ -31,6 +33,7 @@ async def lifespan(app: FastAPI):
     await admin.ensure_indexes(database)
     await notifications.ensure_indexes(database)
     await ensure_photo_indexes(database)
+    await ensure_image_indexes(database)
     log.info("SMS provider: %s", settings.resolved_sms_provider())
     await ml_service.load(database)
     log.info("Routing provider: %s", settings.resolved_routing_provider())
@@ -53,5 +56,9 @@ app.add_middleware(
 )
 errors.install(app)
 
-for r in (auth.router, admin.router, activity.router, meta.router, places.router, recommend.router, hotels.router, planner.router, trips.router, notifications.router):
+for r in (auth.router, admin.router, admin_images.router, activity.router, meta.router, places.router, recommend.router, hotels.router, planner.router, trips.router, notifications.router):
     app.include_router(r)
+
+# Uploaded photos. File names are random and server-generated, and the content was re-encoded on upload.
+settings.uploads_dir.mkdir(parents=True, exist_ok=True)
+app.mount("/api/uploads", StaticFiles(directory=settings.uploads_dir), name="uploads")

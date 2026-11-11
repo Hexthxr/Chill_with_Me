@@ -40,6 +40,7 @@ class Settings:
     mongodb_db: str = field(default_factory=lambda: os.getenv("MONGODB_DB", "chill_with_me"))
 
     data_dir: Path = field(default_factory=lambda: Path(os.getenv("DATA_DIR", str(PROJECT_DIR / "data"))))
+    uploads_dir: Path = field(default_factory=lambda: Path(os.getenv("UPLOADS_DIR", str(BACKEND_DIR / "uploads"))))
     ml_artifacts_dir: Path = field(
         default_factory=lambda: Path(os.getenv("ML_ARTIFACTS_DIR", str(BACKEND_DIR / "ml" / "artifacts")))
     )
