@@ -151,7 +151,7 @@ function SearchCard() {
     `rounded-full px-4 py-1.5 text-sm transition ${on ? 'chip-on bg-leaf text-forest ring-1 ring-forest' : 'bg-white text-ink ring-1 ring-sand hover:-translate-y-0.5 hover:ring-moss'}`
 
   return (
-    <div className="relative mx-auto -mt-28 w-full max-w-4xl px-4 sm:-mt-32">
+    <div className="home-search relative mx-auto -mt-28 w-full max-w-5xl px-4 sm:-mt-32">
       <div className="mx-auto w-fit rounded-t-2xl bg-white/95 px-4 shadow-[0_-4px_16px_rgba(11,85,104,0.12)] backdrop-blur sm:w-[88%]" role="tablist" aria-label="ประเภทการค้นหา">
         <div ref={tabsRef} className="relative flex">
           <TabLine box={tabBox} />
@@ -164,7 +164,7 @@ function SearchCard() {
         </div>
       </div>
 
-      <div className="rounded-3xl bg-gradient-to-b from-white to-[#fdfbf6] p-4 shadow-[0_18px_40px_-14px_rgba(11,85,104,0.35)] ring-1 ring-forest/10 sm:p-7">
+      <div className="search-panel rounded-3xl bg-white p-4 shadow-[0_18px_40px_-14px_rgba(11,85,104,0.35)] ring-1 ring-forest/10 sm:p-7">
         {tab === 'stay' ? (
           <form key="stay" onSubmit={submitStay} className="fade-up space-y-3">
             <label htmlFor="dest" className="sr-only">จุดหมายปลายทางหรือชื่อที่พัก</label>
@@ -564,6 +564,11 @@ function PlannerPromo() {
   )
 }
 
+const INTEREST_IMAGE_POSITIONS = {
+  sea: '0% 0%', mountain: '50% 0%', nature: '100% 0%',
+  cafe: '0% 100%', culture: '50% 100%', family: '100% 100%',
+}
+
 function InterestTiles() {
   const interests = useInterests()
   if (!interests.length) return null
@@ -573,8 +578,16 @@ function InterestTiles() {
       <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-6">
         {interests.map((it, i) => (
           <li key={it.key} className="card-in" style={{ '--i': i }}>
-            <Link to={`/recommend?interests=${it.key}`} className="card-lift group relative block h-32 overflow-hidden rounded-2xl ring-1 ring-forest/5 sm:h-40">
-              <PlaceArt place={{ place_id: `interest-${it.key}`, ml: { top_interest: it.key } }} showLabel={false} usePhoto={false} className="h-full w-full" />
+            <Link to={`/recommend?interests=${it.key}`} className="interest-tile card-lift group relative block aspect-square overflow-hidden rounded-2xl ring-1 ring-forest/5">
+              {INTEREST_IMAGE_POSITIONS[it.key] ? (
+                <span
+                  className="interest-photo absolute inset-0"
+                  style={{ backgroundPosition: INTEREST_IMAGE_POSITIONS[it.key] }}
+                  aria-hidden="true"
+                />
+              ) : (
+                <PlaceArt place={{ place_id: `interest-${it.key}`, ml: { top_interest: it.key } }} showLabel={false} usePhoto={false} className="h-full w-full" />
+              )}
               <span className="absolute inset-x-0 bottom-0 flex items-center justify-between bg-gradient-to-t from-[#06394a]/85 to-transparent px-3 pb-2.5 pt-8 font-medium text-white">
                 {it.label}
                 <span className="link-arrow"><svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg></span>
@@ -583,6 +596,7 @@ function InterestTiles() {
           </li>
         ))}
       </ul>
+      <p className="mt-3 text-xs text-muted">ภาพประกอบหมวดหมู่สร้างด้วย AI เพื่อสื่อบรรยากาศการท่องเที่ยว</p>
     </section>
   )
 }
@@ -622,7 +636,7 @@ export default function Home() {
   return (
     <div className="pb-4">
       <section
-        className="relative h-80 overflow-hidden bg-[#1a8bb5] sm:h-96"
+        className="home-hero relative h-80 overflow-hidden bg-[#1a8bb5] sm:h-96"
       >
         <div className="kenburns absolute inset-0 bg-cover bg-center" style={{ backgroundImage: 'url(/hero-sea.jpg)' }} aria-hidden="true" />
         <div className="absolute inset-0 bg-gradient-to-b from-[#06394a]/50 via-[#06394a]/10 to-transparent" aria-hidden="true" />

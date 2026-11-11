@@ -1,3 +1,4 @@
+import { curatedPlacePhotos } from '../lib/curatedPlacePhotos'
 import { useEffect, useMemo, useState } from 'react'
 import { api, assetUrl } from '../lib/api'
 import { FAMILY_LABEL, familyOf } from '../lib/placeFamily'
@@ -379,10 +380,11 @@ function usePlacePhoto(placeId, enabled) {
       alive = false
     }
   }, [placeId, enabled, seen])
-  return [ref, photo]
+  return [ref, photo || (enabled ? curatedPlacePhotos[placeId] : null)]
 }
 
 function creditText(p) {
+  if (p.source === 'curated') return `ภาพ: ${p.author}${p.provider ? '' : ' · แหล่งที่มา ACES'}`
   if (p.source === 'admin') return p.author ? `ภาพ: ${p.author}` : ''
   return `ภาพ: ${p.author || 'ไม่ระบุผู้ถ่าย'} / ${p.license} ผ่าน Wikimedia Commons`
 }
@@ -408,12 +410,15 @@ export default function PlaceArt({ place, className = '', showLabel = true, live
       {photo && (
         <img
           src={src}
-          alt={showCredit ? (place?.name || '') : ''}
+          alt={place?.name || ''}
           title={credit || undefined}
           referrerPolicy="no-referrer"
           onLoad={() => setLoadedUrl(src)}
           className={`absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105 ${shown ? 'opacity-100' : 'opacity-0'}`}
         />
+      )}
+      {!showCredit && shown && photo.source === 'curated' && (
+        <span className="absolute right-2 top-2 max-w-[85%] truncate rounded bg-black/55 px-2 py-1 text-[10px] text-white" title={credit}>ภาพ: {photo.author}</span>
       )}
       {showCredit && shown && credit && (creditLink ? (
         <a

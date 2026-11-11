@@ -52,9 +52,9 @@ export default function PlaceCard({ place, rank, index = 0 }) {
   const shown = open ? reasons : reasons.slice(0, 2)
 
   return (
-    <article className="card-sky card-lift card-in group flex flex-col overflow-hidden rounded-2xl ring-1 ring-forest/5" style={{ '--i': index }}>
+    <article className="destination-card card-sky card-lift card-in group flex flex-col overflow-hidden rounded-2xl ring-1 ring-forest/5" style={{ '--i': index }}>
       <Link to={`/place/${encodeURIComponent(place.place_id)}`} className="block" aria-label={place.name}>
-        <PlaceArt place={place} className="h-36" />
+        <PlaceArt place={place} className="h-48" />
       </Link>
       <div className="flex flex-1 flex-col p-4">
         <div className="flex items-start justify-between gap-3">
