@@ -11,6 +11,9 @@ Final score combines (all in [0, 1]):
     sentiment   Bayesian-smoothed mean P(positive) from the ML sentiment model
     popularity  log(rating_count) scaled
     distance    exp(-d / (radius/2))   (location mode only)
+
+Ticked interests and the q text filter first: only places whose type or name fits an interest
+(interests.interest_match), or whose profile matches q (MIN_RELEVANCE), are scored at all.
 """
 from __future__ import annotations
 
@@ -27,11 +30,13 @@ from sklearn.preprocessing import normalize
 from app.constants import TYPE_LABELS_TH
 
 from .aspects import ASPECTS
-from .interests import INTERESTS, interest_type_match
+from .interests import INTERESTS, interest_match
 from .text import split_tokens, tokenize_join
 
 WEIGHTS_INTEREST = {"content": 0.35, "type_match": 0.10, "quality": 0.20, "sentiment": 0.20, "popularity": 0.15}
-DISTANCE_WEIGHT = 0.35  # location mode: final = (1-w)*base + w*distance_score
+DISTANCE_WEIGHT = 0.35  # location mode, nothing asked for: final = (1-w)*base + w*distance_score
+DISTANCE_WEIGHT_QUERY = 0.15  # location mode with interests/q: being close must not outrank being what was asked for
+MIN_RELEVANCE = 0.05  # raw cosine a place needs to count as matching the q text
 DIVERSITY_PENALTY = 0.03  # per repeat of the same specific primary_type in the result list
 GENERIC_TYPES = {"สถานที่ท่องเที่ยว", None}
 
@@ -95,9 +100,24 @@ class Recommender:
         # align signals to matrix row order
         self.sig = signals.set_index("place_id").reindex(self.place_ids)
         self.sig["is_accommodation"] = self.sig["is_accommodation"].fillna(False).astype(bool)
-        hidden = self.sig["hidden"].fillna(False).astype(bool) if "hidden" in self.sig else False
+        visible = ~self.sig["hidden"].fillna(False).astype(bool) if "hidden" in self.sig else True
         # present = has data in MongoDB and not hidden by an admin -> the only places rank()/similar() return
-        self.sig["present"] = self.sig["name"].notna() & ~hidden
+        self.sig["present"] = self.sig["name"].notna() & visible
+        rows = list(zip(*(self.sig[c].values for c in self._MATCH_COLUMNS)))
+        self.interest_masks = {k: np.array([self._row_matches(k, r) for r in rows], dtype=bool) for k in INTERESTS}
+
+    _MATCH_COLUMNS = ("name", "province", "primary_type", "types")
+
+    @staticmethod
+    def _row_matches(interest: str, row: tuple) -> bool:
+        name, province, ptype, types = row
+        return interest_match(
+            interest,
+            name if isinstance(name, str) else None,
+            province if isinstance(province, str) else None,
+            ptype if isinstance(ptype, str) else None,
+            types if isinstance(types, list) else [],
+        )
 
     # ---- live updates from the admin panel (no retraining needed)
     def set_hidden(self, place_id: str, hidden: bool) -> None:
@@ -115,6 +135,9 @@ class Recommender:
         for k, v in fields.items():
             if k in self.sig.columns:
                 self.sig.iat[i, self.sig.columns.get_loc(k)] = v
+        row = tuple(self.sig[c].values[i] for c in self._MATCH_COLUMNS)
+        for k, mask in self.interest_masks.items():
+            mask[i] = self._row_matches(k, row)
 
     @classmethod
     def load(cls, artifact_path, signals: pd.DataFrame) -> "Recommender":
@@ -186,32 +209,45 @@ class Recommender:
             mask &= np.nan_to_num(s["rating"].values.astype(float), nan=0.0) >= min_rating
 
         idx = np.flatnonzero(mask)
+        if len(idx) == 0:
+            return [], 0
+
+        qv = query_vector if query_vector is not None else self.query_vector(interests, q)
+        sims = type_match = None
+        if qv is not None:
+            sims = np.asarray((self.X[idx] @ qv.T).todense()).ravel()
+        ticked = [it for it in interests if it in INTERESTS]
+        if ticked:
+            type_match = np.logical_or.reduce([self.interest_masks[it][idx] for it in ticked]).astype(float)
+
+        # Something explicit was asked for: anything else is not a result, however close or popular it is.
+        # (Personal recommendations pass query_vector and stay unfiltered.)
+        if query_vector is None:
+            qv_text = self.query_vector([], q)
+            if ticked or qv_text is not None:
+                keep = type_match > 0 if ticked else np.zeros(len(idx), dtype=bool)
+                if qv_text is not None:
+                    keep |= np.asarray((self.X[idx] @ qv_text.T).todense()).ravel() >= MIN_RELEVANCE
+                idx = idx[keep]
+                sims = sims[keep] if sims is not None else None
+                type_match = type_match[keep] if type_match is not None else None
         total = int(len(idx))
         if total == 0:
             return [], 0
 
-        qv = query_vector if query_vector is not None else self.query_vector(interests, q)
         comp: dict[str, np.ndarray] = {
             "quality": s["quality_score"].values[idx].astype(float),
             "sentiment": s["sentiment_score"].values[idx].astype(float),
             "popularity": s["popularity_score"].values[idx].astype(float),
         }
         weights = dict(WEIGHTS_INTEREST)
-        if qv is not None:
-            sims = np.asarray((self.X[idx] @ qv.T).todense()).ravel()
+        if sims is not None:
             top = sims.max()
             comp["content"] = sims / top if top > 0 else sims
         else:
             weights.pop("content")
-        if interests:
-            ptypes = s["primary_type"].values
-            types = s["types"].values
-            comp["type_match"] = np.array(
-                [
-                    1.0 if any(interest_type_match(it, ptypes[i], types[i] or []) for it in interests if it in INTERESTS) else 0.0
-                    for i in idx
-                ]
-            )
+        if type_match is not None:
+            comp["type_match"] = type_match
         else:
             weights.pop("type_match")
         wsum = sum(weights.values())
@@ -221,7 +257,8 @@ class Recommender:
         if distances_km is not None and radius_km:
             dist_arr = np.array([distances_km.get(self.place_ids[i], np.nan) for i in idx], dtype=float)
             comp["distance"] = np.exp(-np.nan_to_num(dist_arr, nan=radius_km * 3) / (radius_km / 2))
-            final = (1 - DISTANCE_WEIGHT) * base + DISTANCE_WEIGHT * comp["distance"]
+            w = DISTANCE_WEIGHT_QUERY if qv is not None else DISTANCE_WEIGHT
+            final = (1 - w) * base + w * comp["distance"]
         else:
             final = base
 
@@ -328,7 +365,9 @@ class Recommender:
                 msg += f" (คำเด่น: {', '.join(terms)})"
             reasons.append(msg)
         if comp.get("type_match"):
-            reasons.append(f"ประเภท “{row['primary_type'] or 'สถานที่'}” ตรงกับหมวดที่เลือก")
+            matched = [INTERESTS[x]["label"] for x in interests if x in INTERESTS and self.interest_masks[x][i]]
+            if matched:
+                reasons.append(f"ตรงกับหมวด {', '.join(matched)}")
         n = int(row.get("sent_n") or 0)
         if n >= 3 and not math.isnan(row.get("sent_pos_share") or float("nan")):
             reasons.append(f"ML วิเคราะห์ {n:,} รีวิว พบเชิงบวก {row['sent_pos_share'] * 100:.0f}%")
